@@ -5,13 +5,15 @@ game 'rdr3'
 lua54 'yes'
 
 client_scripts {
-	'client/main.lua'
+	'client/client.lua'
 }
 
 server_scripts {
-	'server/main.lua'
+	'server/server.lua'
 }
 
 shared_scripts {
-	'config.lua'
+	'config.lua',
+	'locale.lua',
+	'languages/*.lua'
 }
