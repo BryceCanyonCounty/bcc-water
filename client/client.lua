@@ -138,12 +138,10 @@ function DrinkAnim()
     if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
         TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), 15000, true, false, false, false)
         Wait(15000)
-        VORPcore.NotifyRightTip(_U("drink"), 500)
         ClearPedTasksImmediately(player)
     else
         TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINKING'), 15000, true, false, false, false)
         Wait(15000)
-        VORPcore.NotifyRightTip(_U("drink_1"), 500)
         ClearPedTasksImmediately(player)
     end
 end
