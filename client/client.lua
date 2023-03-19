@@ -79,7 +79,7 @@ AddEventHandler('oss_water:StartFilling', function()
             if water == WaterTypes[k]["waterhash"] then
                 foundWater = true
                 CrouchAnimAndAttach()
-                VORPcore.NotifyRightTip(Config.fill_1, 5000)
+                VORPcore.NotifyRightTip(_U("filling"), 5000)
                 Wait(6000)
                 ClearPedTasks(player)
                 DeleteObject(Canteen)
@@ -90,7 +90,7 @@ AddEventHandler('oss_water:StartFilling', function()
         end
         Filling = false
         if foundWater == false then
-            VORPcore.NotifyRightTip(Config.cantfill, 5000)
+            VORPcore.NotifyRightTip(_U("cantfill"), 5000)
         end
     end
 end)
@@ -138,12 +138,12 @@ function DrinkAnim()
     if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
         TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), 15000, true, false, false, false)
         Wait(15000)
-        VORPcore.NotifyRightTip(Config.drink_1, 500)
+        VORPcore.NotifyRightTip(_U("drink"), 500)
         ClearPedTasksImmediately(player)
     else
         TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINKING'), 15000, true, false, false, false)
         Wait(15000)
-        VORPcore.NotifyRightTip(Config.drink_1, 500)
+        VORPcore.NotifyRightTip(_U("drink_1"), 500)
         ClearPedTasksImmediately(player)
     end
 end

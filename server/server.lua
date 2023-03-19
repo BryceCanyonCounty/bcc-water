@@ -13,7 +13,7 @@ AddEventHandler("oss_water:CheckIfEmpty", function()
 	if empty > 0 then
 		TriggerClientEvent("oss_water:CanteenEmpty", _source)
 	else
-		VORPcore.NotifyRightTip(_source, Config.cantfill, 5000)
+		VORPcore.NotifyRightTip(_source, _U("cantfill"), 5000)
 	end
 end)
 
@@ -22,7 +22,7 @@ AddEventHandler("oss_water:FillCanteen", function()
     local _source = source
 	VORPInv.subItem(_source, "canteenempty", 1)
 	VORPInv.addItem(_source, "canteen", 1)
-	VORPcore.NotifyRightTip(_source, Config.fullup, 5000)
+	VORPcore.NotifyRightTip(_source, _U("full"), 5000)
 end)
 
 Citizen.CreateThread(function()
