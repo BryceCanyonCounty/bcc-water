@@ -1,8 +1,6 @@
---credits to vorp_goldpanning
-
-local entity
+local VORPcore = {}
+local Canteen
 local Filling = false
-
 local WaterTypes = {
     [1] = { ["name"] = "Sea of Coronado", ["waterhash"] = -247856387, ["watertype"] = "lake" },
     [2] = { ["name"] = "San Luis River", ["waterhash"] = -1504425495, ["watertype"] = "river" },
@@ -33,54 +31,66 @@ local WaterTypes = {
     [27] = { ["name"] = "Random5", ["waterhash"] = -196675805, ["watertype"] = "river" },
 }
 
+TriggerEvent("getCore", function(core)
+    VORPcore = core
+end)
+
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(1)
         local player = PlayerPedId()
         local Coords = GetEntityCoords(player)
-        local waterpump = DoesObjectOfTypeExistAtCoords(Coords.x, Coords.y, Coords.z, 1.0, GetHashKey("p_waterpump01x"),
-            0) -- prop required to interact
-        if waterpump ~= false then
+        local waterpump = DoesObjectOfTypeExistAtCoords(Coords.x, Coords.y, Coords.z, 1.0, GetHashKey("p_waterpump01x"), 0) -- prop required to interact
+        if waterpump then
             DrawTxt("Fill Canteen ~t6~[ENTER]", 0.50, 0.95, 0.7, 0.5, true, 255, 255, 255, 255, true)
             if IsControlJustPressed(0, 0xC7B5340A) then
-                TriggerServerEvent('checkcanteen')
+                TriggerServerEvent('oss_water:CheckIfEmpty')
             end
         end
     end
 end)
 
+RegisterNetEvent('oss_water:CanteenEmpty')
+AddEventHandler('oss_water:CanteenEmpty', function()
+    DoPromptAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a", 2);
+    Wait(10000)
+    ClearPedTasks(PlayerPedId())
+    TriggerServerEvent("oss_water:FillCanteen")
 
-RegisterNetEvent('green:StartFilling')
-AddEventHandler('green:StartFilling', function()
+end)
+
+function DoPromptAnim(dict, anim, loop)
+    RequestAnimDict(dict)
+    while not HasAnimDictLoaded(dict) do
+        Citizen.Wait(100)
+    end
+    TaskPlayAnim(PlayerPedId(), dict, anim, 8.0, 8.0, 13000, loop, 0, false, false, false)
+end
+
+RegisterNetEvent('oss_water:StartFilling')
+AddEventHandler('oss_water:StartFilling', function()
     if not Filling then
         Filling = true
-        local ped = PlayerPedId()
-        local coords = GetEntityCoords(ped)
-        local Water = Citizen.InvokeNative(0x5BA7A68A346A5A91, coords.x, coords.y, coords.z)
-        local foundwater = false
-        for k, v in pairs(WaterTypes) do
-            if Water == WaterTypes[k]["waterhash"] then
-                foundwater = true
+        local player = PlayerPedId()
+        local coords = GetEntityCoords(player)
+        local water = Citizen.InvokeNative(0x5BA7A68A346A5A91, coords.x, coords.y, coords.z) -- GetWaterMapZoneAtCoords
+        local foundWater = false
+        for k, _ in pairs(WaterTypes) do
+            if water == WaterTypes[k]["waterhash"] then
+                foundWater = true
                 CrouchAnimAndAttach()
-                TriggerEvent("vorp:TipRight", Config.fill_1, 500)
+                VORPcore.NotifyRightTip(Config.fill_1, 5000)
                 Wait(6000)
-                ClearPedTasks(ped)
-                w = 1
-                local seconds = w / 1
-                for i = 1, seconds, 1 do
-                    Wait(335)
-                end
-                -- Wait(w)
-                ClearPedTasks(ped)
-                DeleteObject(entity)
-                DeleteEntity(entity)
-                TriggerServerEvent("fillup")
+                ClearPedTasks(player)
+                DeleteObject(Canteen)
+                DeleteEntity(Canteen)
+                TriggerServerEvent("oss_water:FillCanteen")
                 break
             end
         end
         Filling = false
-        if foundwater == false then
-            TriggerEvent("vorp:TipRight", Config.cantfill, 10000)
+        if foundWater == false then
+            VORPcore.NotifyRightTip(Config.cantfill, 5000)
         end
     end
 end)
@@ -90,71 +100,56 @@ function CrouchAnimAndAttach()
     local dict = "script_rc@cldn@ig@rsc2_ig1_questionshopkeeper"
     RequestAnimDict(dict)
     while not HasAnimDictLoaded(dict) do
-        Citizen.Wait(10)
+        Citizen.Wait(100)
     end
 
-    local ped = PlayerPedId()
-    local coords = GetEntityCoords(ped)
-    local boneIndex = GetEntityBoneIndexByName(ped, "SKEL_R_HAND")
+    local player = PlayerPedId()
+    local coords = GetEntityCoords(player)
+    local boneIndex = GetEntityBoneIndexByName(player, "SKEL_R_HAND")
     local modelHash = GetHashKey("p_cs_canteen_hercule")
     LoadModel(modelHash)
-    entity = CreateObject(modelHash, coords.x, coords.y, coords.z, true, false, false)
-    SetEntityVisible(entity, true)
-    SetEntityAlpha(entity, 255, false)
-    Citizen.InvokeNative(0x283978A15512B2FE, entity, true)
+    Canteen = CreateObject(modelHash, coords.x, coords.y, coords.z, true, false, false)
+    SetEntityVisible(Canteen, true)
+    SetEntityAlpha(Canteen, 255, false)
+    Citizen.InvokeNative(0x283978A15512B2FE, Canteen, true) -- SetRandomOutfitVariation
     SetModelAsNoLongerNeeded(modelHash)
-    AttachEntityToEntity(entity, ped, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, false, false, false, true, 2, true)
-
-    TaskPlayAnim(ped, dict, "inspectfloor_player", 1.0, 8.0, -1, 1, 0, false, false, false)
+    AttachEntityToEntity(Canteen, player, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, false, false, false, true, 2, true)
+    TaskPlayAnim(player, dict, "inspectfloor_player", 1.0, 8.0, -1, 1, 0, false, false, false)
 end
 
 function LoadModel(model)
     local attempts = 0
     while attempts < 100 and not HasModelLoaded(model) do
         RequestModel(model)
-        Citizen.Wait(10)
+        Citizen.Wait(100)
         attempts = attempts + 1
     end
     return IsModelValid(model)
 end
 
-RegisterNetEvent('canteencheck')
-AddEventHandler('canteencheck', function()
-    doPromptAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a", 2);
-    Wait(10000)
-    ClearPedTasks(PlayerPedId())
-    TriggerServerEvent("fillup")
-
-end)
-
-RegisterNetEvent('green:drink')
-AddEventHandler('green:drink', function()
+RegisterNetEvent('oss_water:Drink')
+AddEventHandler('oss_water:Drink', function()
     TriggerEvent("vorpmetabolism:changeValue", "Thirst", 500)
-    --TriggerEvent("fred_meta:consume", 0, 50, 0, 0, 0, 0, 0, 0) -- UNCOMMENT AND COMMENT ABOVE IF USING FRED_METABOLISM
-    drinkinganim()
+    DrinkAnim()
 end)
 
-function drinkinganim()
-    local ped = PlayerPedId()
-    if IsPedMale(ped) then
-        TaskStartScenarioInPlace(PlayerPedId(), GetHashKey('WORLD_HUMAN_DRINK_FLASK'), 10000, true, false, false,
-            false)
-        Wait(10000)
-        TriggerEvent("vorp:TipRight", Config.drink_1, 500)
-        ClearPedTasksImmediately(PlayerPedId())
+function DrinkAnim()
+    local player = PlayerPedId()
+    if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
+        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), 15000, true, false, false, false)
+        Wait(15000)
+        VORPcore.NotifyRightTip(Config.drink_1, 500)
+        ClearPedTasksImmediately(player)
     else
-        -- FEMALE SCENARIO
-        TaskStartScenarioInPlace(PlayerPedId(), GetHashKey('WORLD_HUMAN_DRINKING'), 10000, true, false, false, false)
-        Wait(10000)
-        TriggerEvent("vorp:TipRight", Config.drink_1, 500)
-        ClearPedTasksImmediately(PlayerPedId())
+        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINKING'), 15000, true, false, false, false)
+        Wait(15000)
+        VORPcore.NotifyRightTip(Config.drink_1, 500)
+        ClearPedTasksImmediately(player)
     end
 end
 
 function DrawTxt(str, x, y, w, h, enableShadow, col1, col2, col3, a, centre)
     local str = CreateVarString(10, "LITERAL_STRING", str)
-
-
     --Citizen.InvokeNative(0x66E0276CC5F6B9DA, 2)
     SetTextScale(w, h)
     SetTextColor(math.floor(col1), math.floor(col2), math.floor(col3), math.floor(a))
@@ -164,14 +159,4 @@ function DrawTxt(str, x, y, w, h, enableShadow, col1, col2, col3, a, centre)
     DisplayText(str, x, y)
 end
 
-function doPromptAnim(dict, anim, loop)
-    activate = false
-    toggle = 0
-    local playerPed = PlayerPedId()
-    RequestAnimDict(dict)
-    while not HasAnimDictLoaded(dict) do
-        Citizen.Wait(100)
-    end
-    TaskPlayAnim(playerPed, dict, anim, 8.0, -8.0, 13000, loop, 0, true, 0, false, 0, false)
-    play_anim = false
-end
+
