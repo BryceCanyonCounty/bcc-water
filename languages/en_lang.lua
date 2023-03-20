@@ -1,8 +1,12 @@
 ---------------------------------- ENGLISH -------------------------------------------
 Locales["en_lang"] = {
 
-    drink = "You drank from your canteen",
     filling = "Filling Canteen...",
-    full = "You filled your canteen.",
+    full = "Your canteen is ~o~full",
+    canteen_75 = "Your canteen is ~o~3/4 ~q~full",
+    canteen_50 = "Your canteen is ~o~1/2 ~q~full",
+    canteen_25 = "Your canteen is ~o~1/4 ~q~full",
+    canteen_empty = "Your canteen is ~o~empty~q~!",
+    not_empty = "Your canteen is ~o~not ~q~empty",
     cantfill = "You can't fill your canteen here",
 }
