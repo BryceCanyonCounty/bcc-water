@@ -6,77 +6,54 @@ end)
 
 VORPInv = exports.vorp_inventory:vorp_inventoryApi()
 
-RegisterNetEvent("oss_water:CheckIfEmpty")
-AddEventHandler("oss_water:CheckIfEmpty", function()
+RegisterNetEvent("oss_water:CheckEmpty")
+AddEventHandler("oss_water:CheckEmpty", function()
 	local _source = source
-	local empty = VORPInv.getItemCount(_source, 'canteenempty')
-	if empty > 0 then
-		TriggerClientEvent("oss_water:CanteenEmpty", _source)
-	else
-		VORPcore.NotifyRightTip(_source, _U("not_empty"), 5000)
-	end
+    local canteen = VORPInv.getItem(_source, "canteen")
+    if canteen ~= nil then
+        local meta = canteen["metadata"]
+        if next(meta) == nil then
+            VORPInv.subItem(_source, "canteen", 1, {})
+            VORPInv.addItem(_source, "canteen", 1, {description = "Level: Full", level = 5})
+            TriggerClientEvent("oss_water:CanteenEmpty", _source)
+        else
+            local level = meta.level
+            if level == 1 then
+                VORPInv.subItem(_source, "canteen", 1, meta)
+                VORPInv.addItem(_source, "canteen", 1, {description = "Level: Full", level = 5})
+                TriggerClientEvent("oss_water:CanteenEmpty", _source)
+            else
+                VORPcore.NotifyRightTip(_source, _U("not_empty"), 5000)
+            end
+        end
+    else
+        VORPcore.NotifyRightTip(_source, _U("needcanteen"), 5000)
+    end
 end)
-
-RegisterNetEvent("oss_water:FillCanteen")
-AddEventHandler("oss_water:FillCanteen", function()
-    local _source = source
-	VORPInv.subItem(_source, "canteenempty", 1)
-	VORPInv.addItem(_source, "canteen", 1)
-	VORPcore.NotifyRightTip(_source, _U("full"), 5000)
-end)
-
-Citizen.CreateThread(function()
-	Citizen.Wait(2000)
-	VORPInv.RegisterUsableItem("canteenempty", function(data)
-		TriggerClientEvent('oss_water:StartFilling', data.source)
-	end)
-end)
-
 
 Citizen.CreateThread(function()
 	Citizen.Wait(2000)
 	VORPInv.RegisterUsableItem("canteen", function(data)
 		local _source = data.source
-		VORPInv.subItem(_source, "canteen", 1)
-		VORPInv.addItem(_source, "canteen_75", 1)
-		TriggerClientEvent('oss_water:Drink', _source)
-		Wait(15000)
-		VORPcore.NotifyRightTip(_source, _U("canteen_75"), 5000)
-	end)
-end)
-
-Citizen.CreateThread(function()
-	Citizen.Wait(2000)
-	VORPInv.RegisterUsableItem("canteen_75", function(data)
-		local _source = data.source
-		VORPInv.subItem(_source, "canteen_75", 1)
-        VORPInv.addItem(_source, "canteen_50", 1)
-		TriggerClientEvent('oss_water:Drink', _source)
-		Wait(15000)
-		VORPcore.NotifyRightTip(_source, _U("canteen_50"), 5000)
-	end)
-end)
-
-Citizen.CreateThread(function()
-	Citizen.Wait(2000)
-	VORPInv.RegisterUsableItem("canteen_50", function(data)
-		local _source = data.source
-		VORPInv.subItem(_source, "canteen_50", 1)
-        VORPInv.addItem(_source, "canteen_25", 1)
-		TriggerClientEvent('oss_water:Drink', _source)
-		Wait(15000)
-		VORPcore.NotifyRightTip(_source, _U("canteen_25"), 5000)
-	end)
-end)
-
-Citizen.CreateThread(function()
-	Citizen.Wait(2000)
-	VORPInv.RegisterUsableItem("canteen_25", function(data)
-		local _source = data.source
-		VORPInv.subItem(_source, "canteen_25", 1)
-        VORPInv.addItem(_source, "canteenempty", 1)
-		TriggerClientEvent('oss_water:Drink', _source)
-		Wait(15000)
-		VORPcore.NotifyRightTip(_source, _U("canteen_empty"), 5000)
+        local canteen = VORPInv.getItem(_source, "canteen")
+        local meta = canteen["metadata"]
+        local level = meta.level
+        if level == 5 then
+            VORPInv.subItem(_source, "canteen", 1, meta)
+            VORPInv.addItem(_source, "canteen", 1, {description = "Level: 75%", level = 4})
+            TriggerClientEvent("oss_water:Drink", _source, "level4")
+        elseif level == 4 then
+            VORPInv.subItem(_source, "canteen", 1, meta)
+            VORPInv.addItem(_source, "canteen", 1, {description = "Level: 50%", level = 3})
+            TriggerClientEvent("oss_water:Drink", _source, "level3")
+        elseif level == 3 then
+            VORPInv.subItem(_source, "canteen", 1, meta)
+            VORPInv.addItem(_source, "canteen", 1, {description = "Level: 25%", level = 2})
+            TriggerClientEvent("oss_water:Drink", _source, "level2")
+        elseif level == 2 then
+            VORPInv.subItem(_source, "canteen", 1, meta)
+            VORPInv.addItem(_source, "canteen_empty", 1, {description = "Level: Empty", level = 1})
+            TriggerClientEvent("oss_water:Drink", _source, "level1")
+        end
 	end)
 end)

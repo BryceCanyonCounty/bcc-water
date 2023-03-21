@@ -15,7 +15,7 @@ Citizen.CreateThread(function()
         if waterpump and IsPedOnFoot(player) then
             DrawTxt("Fill Canteen ~t6~[ENTER]", 0.50, 0.95, 0.7, 0.5, true, 255, 255, 255, 255, true)
             if IsControlJustPressed(0, 0xC7B5340A) then
-                TriggerServerEvent('oss_water:CheckIfEmpty')
+                TriggerServerEvent('oss_water:CheckEmpty')
             end
         end
     end
@@ -23,19 +23,46 @@ end)
 
 RegisterNetEvent('oss_water:CanteenEmpty')
 AddEventHandler('oss_water:CanteenEmpty', function()
-    DoPromptAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a", 2);
+    local player = PlayerPedId()
+    DoPromptAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a");
     Wait(10000)
-    ClearPedTasks(PlayerPedId())
-    TriggerServerEvent("oss_water:FillCanteen")
+    ClearPedTasks(player)
+    VORPcore.NotifyRightTip(player, _U("full"), 5000)
 end)
 
-function DoPromptAnim(dict, anim, loop)
+function DoPromptAnim(dict, anim)
     RequestAnimDict(dict)
     while not HasAnimDictLoaded(dict) do
         Citizen.Wait(100)
     end
     TaskPlayAnim(PlayerPedId(), dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
 end
+
+RegisterNetEvent('oss_water:Drink')
+AddEventHandler('oss_water:Drink', function(level)
+    local player = PlayerPedId()
+    if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
+        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
+        Wait(15000)
+        ClearPedTasks(player, false, false)
+    else
+        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_COFFEE_DRINK'), -1, true, false, false, false)
+        Wait(15000)
+        ClearPedTasks(player, false, false)
+        Wait(5000)
+        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
+    end
+    if level == "level4" then
+        VORPcore.NotifyRightTip(player, _U("level4"), 5000)
+    elseif level == "level3" then
+        VORPcore.NotifyRightTip(player, _U("level3"), 5000)
+    elseif level == "level2" then
+        VORPcore.NotifyRightTip(player, _U("level2"), 5000)
+    elseif level == "level1" then
+        VORPcore.NotifyRightTip(player, _U("level1"), 5000)
+    end
+    TriggerEvent("vorpmetabolism:changeValue", "Thirst", 500)
+end)
 
 RegisterNetEvent('oss_water:StartFilling')
 AddEventHandler('oss_water:StartFilling', function()
@@ -71,7 +98,6 @@ function CrouchAnimAndAttach()
     while not HasAnimDictLoaded(dict) do
         Citizen.Wait(100)
     end
-
     local player = PlayerPedId()
     local coords = GetEntityCoords(player)
     local boneIndex = GetEntityBoneIndexByName(player, "SKEL_R_HAND")
@@ -96,23 +122,6 @@ function LoadModel(model)
     return IsModelValid(model)
 end
 
-RegisterNetEvent('oss_water:Drink')
-AddEventHandler('oss_water:Drink', function()
-    local player = PlayerPedId()
-    if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
-        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
-        Wait(15000)
-        ClearPedTasks(player, false, false)
-    else
-        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_COFFEE_DRINK'), -1, true, false, false, false)
-        Wait(15000)
-        ClearPedTasks(player, false, false)
-        Wait(5000)
-        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-    end
-    TriggerEvent("vorpmetabolism:changeValue", "Thirst", 500)
-end)
-
 function DrawTxt(str, x, y, w, h, enableShadow, col1, col2, col3, a, centre)
     local str = CreateVarString(10, "LITERAL_STRING", str)
     --Citizen.InvokeNative(0x66E0276CC5F6B9DA, 2)
@@ -123,5 +132,3 @@ function DrawTxt(str, x, y, w, h, enableShadow, col1, col2, col3, a, centre)
     Citizen.InvokeNative(0xADA9255D, 1);
     DisplayText(str, x, y)
 end
-
-
