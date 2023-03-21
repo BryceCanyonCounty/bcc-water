@@ -98,11 +98,6 @@ end
 
 RegisterNetEvent('oss_water:Drink')
 AddEventHandler('oss_water:Drink', function()
-    TriggerEvent("vorpmetabolism:changeValue", "Thirst", 500)
-    DrinkAnim()
-end)
-
-function DrinkAnim()
     local player = PlayerPedId()
     if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
         TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
@@ -113,9 +108,10 @@ function DrinkAnim()
         Wait(15000)
         ClearPedTasks(player, false, false)
         Wait(5000)
-        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true)
+        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     end
-end
+    TriggerEvent("vorpmetabolism:changeValue", "Thirst", 500)
+end)
 
 function DrawTxt(str, x, y, w, h, enableShadow, col1, col2, col3, a, centre)
     local str = CreateVarString(10, "LITERAL_STRING", str)

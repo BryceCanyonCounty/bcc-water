@@ -38,7 +38,7 @@ Citizen.CreateThread(function()
 	VORPInv.RegisterUsableItem("canteen", function(data)
 		local _source = data.source
 		VORPInv.subItem(_source, "canteen", 1)
-        VORPInv.addItem(_source, "canteen_75", 1)
+		VORPInv.addItem(_source, "canteen_75", 1)
 		TriggerClientEvent('oss_water:Drink', _source)
 		Wait(15000)
 		VORPcore.NotifyRightTip(_source, _U("canteen_75"), 5000)
