@@ -1,4 +1,6 @@
 local VORPcore = {}
+local VORPutils = {}
+local WaterPump
 local Canteen
 local Filling = false
 
@@ -6,28 +8,34 @@ TriggerEvent("getCore", function(core)
     VORPcore = core
 end)
 
+TriggerEvent("getUtils", function(utils)
+    VORPutils = utils
+end)
+
 Citizen.CreateThread(function()
+    local pumps = VORPutils.Prompts:SetupPromptGroup()
+    WaterPump = pumps:RegisterPrompt(_U("fill"), Config.pumpKey, 1, 1, true, 'click')
     while true do
-        Citizen.Wait(1)
+        Citizen.Wait(0)
         local player = PlayerPedId()
         local Coords = GetEntityCoords(player)
-        local waterpump = DoesObjectOfTypeExistAtCoords(Coords.x, Coords.y, Coords.z, 1.0, GetHashKey("p_waterpump01x"), 0) -- prop required to interact
-        if waterpump and IsPedOnFoot(player) then
-            DrawTxt("Fill Canteen ~t6~[ENTER]", 0.50, 0.95, 0.7, 0.5, true, 255, 255, 255, 255, true)
-            if IsControlJustPressed(0, 0xC7B5340A) then
+        local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, Coords.x, Coords.y, Coords.z, 1.0, GetHashKey("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
+        if pumpLoc and IsPedOnFoot(player) then
+            pumps:ShowGroup("Water Pump")
+            if WaterPump:HasCompleted() then
                 TriggerServerEvent('oss_water:CheckEmpty')
             end
         end
     end
 end)
 
-RegisterNetEvent('oss_water:CanteenEmpty')
-AddEventHandler('oss_water:CanteenEmpty', function()
+RegisterNetEvent('oss_water:PumpFill')
+AddEventHandler('oss_water:PumpFill', function()
     local player = PlayerPedId()
     DoPromptAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a");
     Wait(10000)
-    ClearPedTasks(player)
-    VORPcore.NotifyRightTip(player, _U("full"), 5000)
+    ClearPedTasks(player, false, false)
+    VORPcore.NotifyRightTip(_U("full"), 5000)
 end)
 
 function DoPromptAnim(dict, anim)
@@ -39,7 +47,7 @@ function DoPromptAnim(dict, anim)
 end
 
 RegisterNetEvent('oss_water:Drink')
-AddEventHandler('oss_water:Drink', function(level)
+AddEventHandler('oss_water:Drink', function(message)
     local player = PlayerPedId()
     if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
         TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
@@ -52,16 +60,16 @@ AddEventHandler('oss_water:Drink', function(level)
         Wait(5000)
         Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     end
-    if level == "level4" then
-        VORPcore.NotifyRightTip(player, _U("level4"), 5000)
-    elseif level == "level3" then
-        VORPcore.NotifyRightTip(player, _U("level3"), 5000)
-    elseif level == "level2" then
-        VORPcore.NotifyRightTip(player, _U("level2"), 5000)
-    elseif level == "level1" then
-        VORPcore.NotifyRightTip(player, _U("level1"), 5000)
+    if message == 4 then
+        VORPcore.NotifyRightTip(_U("level_4"), 5000)
+    elseif message == 3 then
+        VORPcore.NotifyRightTip(_U("level_3"), 5000)
+    elseif message == 2 then
+        VORPcore.NotifyRightTip(_U("level_2"), 5000)
+    elseif message == 1 then
+        VORPcore.NotifyRightTip(_U("level_1"), 5000)
     end
-    TriggerEvent("vorpmetabolism:changeValue", "Thirst", 500)
+    TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.thirst)
 end)
 
 RegisterNetEvent('oss_water:StartFilling')
@@ -73,15 +81,15 @@ AddEventHandler('oss_water:StartFilling', function()
         local water = Citizen.InvokeNative(0x5BA7A68A346A5A91, coords.x, coords.y, coords.z) -- GetWaterMapZoneAtCoords
         local foundWater = false
         for k, _ in pairs(Config.waterTypes) do
-            if water == Config.waterTypes[k]["waterhash"] then
+            if water == Config.waterTypes[k]["waterhash"] and IsPedOnFoot(player) then
                 foundWater = true
+                
                 CrouchAnimAndAttach()
-                VORPcore.NotifyRightTip(_U("filling"), 5000)
                 Wait(15000)
                 ClearPedTasks(player, false, false)
                 DeleteObject(Canteen)
                 DeleteEntity(Canteen)
-                TriggerServerEvent("oss_water:FillCanteen")
+                TriggerServerEvent('oss_water:FillCanteen')
                 break
             end
         end
@@ -122,13 +130,10 @@ function LoadModel(model)
     return IsModelValid(model)
 end
 
-function DrawTxt(str, x, y, w, h, enableShadow, col1, col2, col3, a, centre)
-    local str = CreateVarString(10, "LITERAL_STRING", str)
-    --Citizen.InvokeNative(0x66E0276CC5F6B9DA, 2)
-    SetTextScale(w, h)
-    SetTextColor(math.floor(col1), math.floor(col2), math.floor(col3), math.floor(a))
-    SetTextCentre(centre)
-    if enableShadow then SetTextDropshadow(1, 0, 0, 0, 255) end
-    Citizen.InvokeNative(0xADA9255D, 1);
-    DisplayText(str, x, y)
-end
+AddEventHandler('onResourceStop', function(resourceName)
+    if (GetCurrentResourceName() ~= resourceName) then
+        return
+    end
+    ClearPedTasksImmediately(PlayerPedId())
+    WaterPump:DeletePrompt()
+end)
