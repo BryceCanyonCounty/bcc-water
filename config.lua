@@ -2,6 +2,12 @@ Config = {}
 
 Config.defaultlang = "en_lang"
 
+-- Fill Canteen at Waterpumps
+Config.pumpKey = 0x760A9C6F -- [G]
+
+-- Amount to Increase Thirst in vorp_metabolism
+Config.thirst = 500 -- Default: 500
+
 Config.waterTypes = {
     [1]  = { ["name"] = "Sea of Coronado",     ["waterhash"] = -247856387,  ["watertype"] = "lake"  },
     [2]  = { ["name"] = "San Luis River",      ["waterhash"] = -1504425495, ["watertype"] = "river" },
