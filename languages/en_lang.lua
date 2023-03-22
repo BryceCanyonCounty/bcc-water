@@ -1,12 +1,12 @@
 ---------------------------------- ENGLISH -------------------------------------------
 Locales["en_lang"] = {
 
-    filling = "Filling canteen...",
+    fill = "Fill",
     full = "Your canteen is ~o~full",
-    level4 = "Your canteen is ~o~75% ~q~full",
-    level3 = "Your canteen is ~o~50% ~q~full",
-    level2 = "Your canteen is ~o~25% ~q~full",
-    level1 = "Your canteen is ~o~empty~q~!",
+    level_4 = "Canteen is ~o~75 ~q~percent full",
+    level_3 = "Canteen is ~o~50 ~q~percent full",
+    level_2 = "Canteen is ~o~25 ~q~percent full",
+    level_1 = "Your canteen is ~o~empty~q~!",
     not_empty = "Your canteen is ~o~not ~q~empty",
     cantfill = "You can't fill your canteen here",
     needcanteen = "You need a canteen!"
