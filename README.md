@@ -16,12 +16,14 @@ Water script for RedM servers using the [VORP framework](https://github.com/VORP
 #### Dependencies
 - [vorp_core](https://github.com/VORPCORE/vorp-core-lua)
 - [vorp_inventory](https://github.com/VORPCORE/vorp_inventory-lua)
+- [vorp_utils](https://github.com/VORPCORE/vorp_utils)
+- [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua)
 
 #### Installation
 - Add `oss_water` folder to your resources folder
 - Add `ensure oss_water` to your `resources.cfg`
 - Run the included database file `oss_water.sql`
-- Add canteen images to: `...\vorp_inventory\html\img`
+- Add canteen image to: `...\vorp_inventory\html\img`
 
 #### Credits
 - green_canteen
