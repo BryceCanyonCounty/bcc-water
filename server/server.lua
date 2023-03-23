@@ -15,17 +15,17 @@ AddEventHandler("oss_water:CheckEmpty", function()
         if next(meta) == nil then
             VORPInv.subItem(_source, "canteen", 1, {})
             VORPInv.addItem(_source, "canteen", 1, {description = "Level : Full", level = 5})
-            TriggerClientEvent("oss_water:PumpFill", _source)
         else
             local level = meta.level
             if level == 1 then
                 VORPInv.subItem(_source, "canteen", 1, meta)
                 VORPInv.addItem(_source, "canteen", 1, {description = "Level : Full", level = 5})
-                TriggerClientEvent("oss_water:PumpFill", _source)
             else
                 VORPcore.NotifyRightTip(_source, _U("not_empty"), 5000)
+                return
             end
         end
+        TriggerClientEvent("oss_water:FillCanteen", _source)
     else
         VORPcore.NotifyRightTip(_source, _U("needcanteen"), 5000)
     end
