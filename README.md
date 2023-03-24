@@ -11,6 +11,8 @@ Water script for RedM servers using the [VORP framework](https://github.com/VORP
 - Drink 4 times from a full canteen
 - Quenches thirst when using [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua)
 - Refill canteen at waterpumps, rivers and lakes
+- Players can wash in rivers and lakes
+- Directly drink from rivers and lakes to save the water in your canteen
 - More to come!
 
 #### Dependencies
