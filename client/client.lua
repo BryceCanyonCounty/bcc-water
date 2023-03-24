@@ -6,6 +6,7 @@ local Wash
 local Drink
 local Canteen
 local PumpAnim
+local Filling = false
 
 TriggerEvent("getCore", function(core)
     VORPcore = core
@@ -30,9 +31,9 @@ Citizen.CreateThread(function()
         local coords = GetEntityCoords(player)
         local sleep = true
         local dead = IsEntityDead(player)
-        local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 1.0, GetHashKey("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
         if not dead then
             -- Waterpumps
+            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 1.0, GetHashKey("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
             if pumpLoc and IsPedOnFoot(player) then
                 sleep = false
                 pumpPrompt:ShowGroup("Water Pump")
@@ -43,22 +44,30 @@ Citizen.CreateThread(function()
             else
                 -- Rivers and Lakes
                 local water = Citizen.InvokeNative(0x5BA7A68A346A5A91, coords.x, coords.y, coords.z) -- GetWaterMapZoneAtCoords
-                for k, _ in pairs(Config.waterTypes) do
-                    if water == Config.waterTypes[k].waterhash and IsPedOnFoot(player) then
+                for k, _ in pairs(Config.locations) do
+                    if water == Config.locations[k].hash and IsPedOnFoot(player) then
                         if IsEntityInWater(player) and Citizen.InvokeNative(0xD5FE956C70FF370B, player) then -- GetPedCrouchMovement
-                            sleep = false
-                            waterPrompts:ShowGroup(Config.waterTypes[k].name)
-                            if Fill:HasCompleted() then
-                                PumpAnim = false
-                                TriggerServerEvent('oss_water:CheckEmpty')
-                                break
-                            end
-                            if Wash:HasCompleted() then
-                                StartWash("amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d", "idle_l")
-                                break
-                            end
-                            if Drink:HasCompleted() then
-                                print("drink")
+                            if Citizen.InvokeNative(0xAC29253EEF8F0180, player) then -- IsPedStill
+                                sleep = false
+                                waterPrompts:ShowGroup(Config.locations[k].name)
+                                if Fill:HasCompleted() then
+                                    Filling = true
+                                    PumpAnim = false
+                                    TriggerServerEvent('oss_water:CheckEmpty')
+                                    break
+                                end
+                                if Wash:HasCompleted() then
+                                    if not Filling then
+                                        PlayAnim("amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d", "idle_l", true)
+                                    end
+                                    break
+                                end
+                                if Drink:HasCompleted() then
+                                    if not Filling then
+                                        PlayAnim("amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c", "idle_h", false)
+                                    end
+                                    break
+                                end
                             end
                         end
                     end
@@ -88,8 +97,9 @@ AddEventHandler('oss_water:FillCanteen', function()
         Wait(15000)
         ClearPedTasks(player, true, true)
         DeleteObject(Canteen)
+        Filling = false
     else
-        PumpWater("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a");
+        PlayAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a", false)
     end
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U("full"), 5000)
@@ -102,47 +112,11 @@ function LoadModel(model)
         Citizen.Wait(10)
     end
 end
-
-function PumpWater(dict, anim)
-    local player = PlayerPedId()
-    LoadAnim(dict)
-    TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
-    Wait(10000)
-    ClearPedTasks(player, false, false)
-end
-
-function StartWash(dict, anim)
-    local player = PlayerPedId()
-    LoadAnim(dict)
-    TaskPlayAnim(player, dict, anim, 1.0, 8.0, 5000, 0, 0.0, false, false, false)
-    Wait(5000)
-    ClearPedTasks(player)
-    Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
-    Citizen.InvokeNative(0x9C720776DAA43E7E, player) -- ClearPedWetness
-    Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
-end
-
-function LoadAnim(dict)
-    RequestAnimDict(dict)
-    while not HasAnimDictLoaded(dict) do
-    Wait(10)
-    end
-end
--- Drink Animations
+-- Drink from Canteen Animations
 RegisterNetEvent('oss_water:Drink')
 AddEventHandler('oss_water:Drink', function(message)
-    local player = PlayerPedId()
-    if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
-        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
-        Wait(15000)
-        ClearPedTasks(player, false, false)
-    else
-        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_COFFEE_DRINK'), -1, true, false, false, false)
-        Wait(15000)
-        ClearPedTasks(player, false, false)
-        Wait(5000)
-        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-    end
+    PlayAnim("q055amb_rest_drunk@world_human_drinking@male_c@idle_a", "idle_a", false)
+    -- Canteen Level Messages
     if Config.showMessages then
         if message == 4 then
             VORPcore.NotifyRightTip(_U("level_4"), 5000)
@@ -156,6 +130,31 @@ AddEventHandler('oss_water:Drink', function(message)
     end
     TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.thirst)
 end)
+
+RegisterNetEvent('oss_water:Filling')
+AddEventHandler('oss_water:Filling', function()
+    Filling = false
+end)
+
+function PlayAnim(dict, anim, wash)
+    local player = PlayerPedId()
+    LoadAnim(dict)
+    TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
+    Wait(10000)
+    ClearPedTasks(player, false, false)
+    if wash then
+        Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
+        Citizen.InvokeNative(0x9C720776DAA43E7E, player) -- ClearPedWetness
+        Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
+    end
+end
+
+function LoadAnim(dict)
+    RequestAnimDict(dict)
+    while not HasAnimDictLoaded(dict) do
+    Wait(10)
+    end
+end
 
 AddEventHandler('onResourceStop', function(resourceName)
     if (GetCurrentResourceName() ~= resourceName) then
