@@ -1,7 +1,7 @@
 ---------------------------------- ENGLISH -------------------------------------------
 Locales["en_lang"] = {
 
-    fill = "Fill",
+    fill = "Fill Canteen",
     wash = "Wash",
     drink = "Drink",
     full = "Your canteen is ~o~full",
