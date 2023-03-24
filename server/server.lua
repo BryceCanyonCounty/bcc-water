@@ -22,6 +22,7 @@ AddEventHandler("oss_water:CheckEmpty", function()
                 VORPInv.addItem(_source, "canteen", 1, {description = "Level : Full", level = 5})
             else
                 VORPcore.NotifyRightTip(_source, _U("not_empty"), 5000)
+                TriggerClientEvent('oss_water:Filling', _source)
                 return
             end
         end
