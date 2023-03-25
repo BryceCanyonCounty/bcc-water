@@ -7,6 +7,8 @@ local Drink
 local Canteen
 local PumpAnim
 local Filling = false
+local IsWild
+local UseCanteen = true
 
 TriggerEvent("getCore", function(core)
     VORPcore = core
@@ -42,7 +44,7 @@ Citizen.CreateThread(function()
                     TriggerServerEvent('oss_water:CheckEmpty')
                 end
             else
-                -- Rivers and Lakes
+                -- Wild Waters
                 local water = Citizen.InvokeNative(0x5BA7A68A346A5A91, coords.x, coords.y, coords.z) -- GetWaterMapZoneAtCoords
                 for k, _ in pairs(Config.locations) do
                     if water == Config.locations[k].hash and IsPedOnFoot(player) then
@@ -83,6 +85,7 @@ end)
 RegisterNetEvent('oss_water:FillCanteen')
 AddEventHandler('oss_water:FillCanteen', function()
     local player = PlayerPedId()
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     if not PumpAnim then
         local coords = GetEntityCoords(player)
         local boneIndex = GetEntityBoneIndexByName(player, "SKEL_R_HAND")
@@ -105,11 +108,23 @@ AddEventHandler('oss_water:FillCanteen', function()
         VORPcore.NotifyRightTip(_U("full"), 5000)
     end
 end)
--- Drink from Canteen Animations
+-- Drink from Canteen
 RegisterNetEvent('oss_water:Drink')
 AddEventHandler('oss_water:Drink', function(message)
-    PlayAnim("q055amb_rest_drunk@world_human_drinking@male_c@idle_a", "idle_a")
-    Wait(10000)
+    local player = PlayerPedId()
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, false) -- HidePedWeapons
+    if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
+        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
+        Wait(15000)
+        ClearPedTasks(player, true, true)
+    else
+        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_COFFEE_DRINK'), -1, true, false, false, false)
+        Wait(15000)
+        ClearPedTasks(player, true, true)
+        Wait(5000)
+        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
+    end
+    IsWild = false
     PlayerStats()
     -- Canteen Level Messages
     if Config.showMessages then
@@ -124,29 +139,56 @@ AddEventHandler('oss_water:Drink', function(message)
         end
     end
 end)
-
-function WashPlayer()
-    local player = PlayerPedId()
-    PlayAnim("amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d", "idle_l")
-    Wait(10000)
-    Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
-    Citizen.InvokeNative(0x9C720776DAA43E7E, player) -- ClearPedWetness
-    Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
-end
-
+-- Drink Directly from Wild Waters
 function WildDrink()
+    local player = PlayerPedId()
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     PlayAnim("amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c", "idle_h")
-    Wait(10000)
+    IsWild = true
     PlayerStats()
 end
-
+-- Wash Player in Wild Waters
+function WashPlayer()
+    local player = PlayerPedId()
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
+    PlayAnim("amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d", "idle_l")
+    Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
+    Citizen.InvokeNative(0x523C79AEEFCC4A2A, player, 10, "ALL") -- ClearPedDamageDecalByZone
+    Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
+    Citizen.InvokeNative(0xE3144B932DFDFF65, player, 0.0, -1, 1, 1) -- SetPedDirtCleaned
+end
+-- Boosts from Drinking
 function PlayerStats()
-    TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.thirst)
+    local player = PlayerPedId()
+    local health = Citizen.InvokeNative(0x36731AC041289BB1, player, 0) -- GetAttributeCoreValue
+    local stamina = Citizen.InvokeNative(0x36731AC041289BB1, player, 1) -- GetAttributeCoreValue
+    print()
+    if IsWild then
+        -- Wild Waters
+        Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.wildHealth) -- SetAttributeCoreValue
+        Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.wildStamina) -- SetAttributeCoreValue
+        TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.wildThirst)
+    else
+        -- Canteen
+        Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.health) -- SetAttributeCoreValue
+        Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.stamina) -- SetAttributeCoreValue
+        TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.thirst)
+    end
 end
 
 RegisterNetEvent('oss_water:Filling')
 AddEventHandler('oss_water:Filling', function()
     Filling = false
+end)
+
+RegisterNetEvent('oss_water:UseCanteen')
+AddEventHandler('oss_water:UseCanteen', function(data)
+    if UseCanteen then
+        TriggerServerEvent('oss_water:UpdateCanteen', data)
+        UseCanteen = false
+        Wait(15000)
+        UseCanteen = true
+    end
 end)
 
 function PlayAnim(dict, anim)
