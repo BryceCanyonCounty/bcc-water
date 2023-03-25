@@ -58,13 +58,13 @@ Citizen.CreateThread(function()
                                 end
                                 if Wash:HasCompleted() then
                                     if not Filling then
-                                        PlayAnim("amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d", "idle_l", true)
+                                        WashPlayer()
                                     end
                                     break
                                 end
                                 if Drink:HasCompleted() then
                                     if not Filling then
-                                        PlayAnim("amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c", "idle_h", false)
+                                        WildDrink()
                                     end
                                     break
                                 end
@@ -99,23 +99,18 @@ AddEventHandler('oss_water:FillCanteen', function()
         DeleteObject(Canteen)
         Filling = false
     else
-        PlayAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a", false)
+        PlayAnim("amb_work@prop_human_pump_water@female_b@idle_a", "idle_a")
     end
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U("full"), 5000)
     end
 end)
-
-function LoadModel(model)
-    while not HasModelLoaded(model) do
-        RequestModel(model)
-        Citizen.Wait(10)
-    end
-end
 -- Drink from Canteen Animations
 RegisterNetEvent('oss_water:Drink')
 AddEventHandler('oss_water:Drink', function(message)
-    PlayAnim("q055amb_rest_drunk@world_human_drinking@male_c@idle_a", "idle_a", false)
+    PlayAnim("q055amb_rest_drunk@world_human_drinking@male_c@idle_a", "idle_a")
+    Wait(10000)
+    PlayerStats()
     -- Canteen Level Messages
     if Config.showMessages then
         if message == 4 then
@@ -128,31 +123,51 @@ AddEventHandler('oss_water:Drink', function(message)
             VORPcore.NotifyRightTip(_U("level_1"), 5000)
         end
     end
-    TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.thirst)
 end)
+
+function WashPlayer()
+    local player = PlayerPedId()
+    PlayAnim("amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d", "idle_l")
+    Wait(10000)
+    Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
+    Citizen.InvokeNative(0x9C720776DAA43E7E, player) -- ClearPedWetness
+    Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
+end
+
+function WildDrink()
+    PlayAnim("amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c", "idle_h")
+    Wait(10000)
+    PlayerStats()
+end
+
+function PlayerStats()
+    TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.thirst)
+end
 
 RegisterNetEvent('oss_water:Filling')
 AddEventHandler('oss_water:Filling', function()
     Filling = false
 end)
 
-function PlayAnim(dict, anim, wash)
+function PlayAnim(dict, anim)
     local player = PlayerPedId()
     LoadAnim(dict)
     TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
     Wait(10000)
     ClearPedTasks(player, false, false)
-    if wash then
-        Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
-        Citizen.InvokeNative(0x9C720776DAA43E7E, player) -- ClearPedWetness
-        Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
-    end
 end
 
 function LoadAnim(dict)
     RequestAnimDict(dict)
     while not HasAnimDictLoaded(dict) do
     Wait(10)
+    end
+end
+
+function LoadModel(model)
+    while not HasModelLoaded(model) do
+        RequestModel(model)
+        Citizen.Wait(10)
     end
 end
 
