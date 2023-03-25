@@ -2,22 +2,33 @@ Config = {}
 
 Config.defaultlang = "en_lang"
 
--- Fill Canteen at Water Pumps, Rivers and Lakes
-Config.fillKey = 0xB2F377E8 -- [F]
+-- Fill Canteen at Water Pumps and Wild Waters
+Config.fillKey = 0xB2F377E8 -- [F] - 0xB2F377E8
 
--- Wash Player in Rivers and Lakes
-Config.washKey = 0xD9D0E1C0 -- [Space]
+-- Wash Player in Wild Waters
+Config.washKey = 0xD9D0E1C0 -- [Space] - 0xD9D0E1C0
 
--- Drink from Rivers and Lakes
-Config.drinkKey = 0x760A9C6F -- [G]
+-- Drink from Wild Waters
+Config.drinkKey = 0x760A9C6F -- [G] - 0x760A9C6F
 
 -- Show / Hide Canteen Level Messages
 Config.showMessages = true
 
--- Amount to Increase Thirst in vorp_metabolism
-Config.thirst = 500 -- Default: 500
+-- Boosts Drinking from Canteen
+Config.health = 10 -- Default: 10 / Value is 0 - 100
 
-Config.locations = {
+Config.stamina = 20 -- Default: 20 / Value is 0 - 100
+
+Config.thirst = 500 -- Default: 500 / Value is 0 - 1000
+
+-- Boosts Drinking Directly from Wild Waters
+Config.wildHealth = 5 -- Default: 5 / Value is 0 - 100
+
+Config.wildStamina = 10 -- Default: 10 / Value is 0 - 100
+
+Config.wildThirst = 250 -- Default: 250 / Value is 0 - 1000
+
+Config.locations = { -- Wild Water Locations
     [1]  = { name = "Sea of Coronado",     hash = -247856387  },
     [2]  = { name = "San Luis River",      hash = -1504425495 },
     [3]  = { name = "Lake Don Julio",      hash = -1369817450 },
