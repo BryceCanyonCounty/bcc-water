@@ -96,9 +96,7 @@ AddEventHandler('oss_water:FillCanteen', function()
         SetEntityAlpha(Canteen, 255, false)
         SetModelAsNoLongerNeeded(modelHash)
         AttachEntityToEntity(Canteen, player, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, false, false, false, true, 2, true)
-        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_CROUCH_INSPECT'), -1, false, false, false, false)
-        Wait(15000)
-        ClearPedTasks(player, true, true)
+        PlayAnim("amb_work@world_human_crouch_inspect@male_c@idle_a", "idle_a")
         DeleteObject(Canteen)
         Filling = false
     else
@@ -141,8 +139,6 @@ AddEventHandler('oss_water:Drink', function(message)
 end)
 -- Drink Directly from Wild Waters
 function WildDrink()
-    local player = PlayerPedId()
-    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     PlayAnim("amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c", "idle_h")
     IsWild = true
     PlayerStats()
@@ -150,7 +146,6 @@ end
 -- Wash Player in Wild Waters
 function WashPlayer()
     local player = PlayerPedId()
-    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     PlayAnim("amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d", "idle_l")
     Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
     Citizen.InvokeNative(0x523C79AEEFCC4A2A, player, 10, "ALL") -- ClearPedDamageDecalByZone
@@ -194,6 +189,7 @@ end)
 function PlayAnim(dict, anim)
     local player = PlayerPedId()
     LoadAnim(dict)
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
     Wait(10000)
     ClearPedTasks(player, false, false)
