@@ -35,7 +35,7 @@ Config.locations = { -- Wild Water Locations
     [4]  = { name = "Flat Iron Lake",      hash = -1356490953 },
     [5]  = { name = "Upper Montana River", hash = -1781130443 },
     [6]  = { name = "Owanjila",            hash = -1300497193 },
-    [7]  = { name = "HawkEye Creek",       hash = -1276586360 },
+    [7]  = { name = "Hawkeye Creek",       hash = -1276586360 },
     [8]  = { name = "Little Creek River",  hash = -1410384421 },
     [9]  = { name = "Dakota River",        hash =  370072007  },
     [10] = { name = "Beartooth Beck",      hash =  650214731  },
@@ -50,9 +50,9 @@ Config.locations = { -- Wild Water Locations
     [19] = { name = "Heartland Overflow",  hash =  1755369577 },
     [20] = { name = "Lagras",              hash = -557290573  },
     [21] = { name = "Lannahechee River",   hash = -2040708515 },
-    [22] = { name = "Random1",             hash =  231313522  },
-    [23] = { name = "Random2",             hash =  2005774838 },
-    [24] = { name = "Random3",             hash = -1287619521 },
-    [25] = { name = "Random4",             hash = -1308233316 },
-    [26] = { name = "Random5",             hash = -196675805  }
+    [22] = { name = "Unknown Waters 1",    hash =  231313522  },
+    [23] = { name = "Unknown Waters 2",    hash =  2005774838 },
+    [24] = { name = "Unknown Waters 3",    hash = -1287619521 },
+    [25] = { name = "Unknown Waters 4",    hash = -1308233316 },
+    [26] = { name = "Unknown Waters 5",    hash = -196675805  }
 }
