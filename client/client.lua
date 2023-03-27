@@ -108,7 +108,7 @@ AddEventHandler('oss_water:FillCanteen', function()
 end)
 -- Drink from Canteen
 RegisterNetEvent('oss_water:Drink')
-AddEventHandler('oss_water:Drink', function(message)
+AddEventHandler('oss_water:Drink', function(level)
     local player = PlayerPedId()
     Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, false) -- HidePedWeapons
     if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
@@ -125,15 +125,15 @@ AddEventHandler('oss_water:Drink', function(message)
     IsWild = false
     PlayerStats()
     -- Canteen Level Messages
+    local levelMessage = {
+        [1] = _U("level_1"),
+        [2] = _U("level_2"),
+        [3] = _U("level_3"),
+        [4] = _U("level_4")
+    }
     if Config.showMessages then
-        if message == 4 then
-            VORPcore.NotifyRightTip(_U("level_4"), 5000)
-        elseif message == 3 then
-            VORPcore.NotifyRightTip(_U("level_3"), 5000)
-        elseif message == 2 then
-            VORPcore.NotifyRightTip(_U("level_2"), 5000)
-        elseif message == 1 then
-            VORPcore.NotifyRightTip(_U("level_1"), 5000)
+        if levelMessage[level] then
+            VORPcore.NotifyRightTip(levelMessage[level], 5000)
         end
     end
 end)
