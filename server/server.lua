@@ -75,7 +75,10 @@ AddEventHandler("oss_water:UpdateCanteen", function(data)
         if canteenUpdate[level] then
             canteenUpdate[level]()
         end
-        if level > 1 then
+        if level == nil then
+            VORPcore.NotifyRightTip(_source, _U("level_1"), 5000)
+            return
+        elseif level > 1 then
             TriggerClientEvent('oss_water:Drink', _source, message)
         end
 end)
