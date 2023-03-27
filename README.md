@@ -10,7 +10,7 @@ Crouch and hold still in wild waters to show drink, wash and fill prompts.
 - Quenches thirst when using [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua)
 - Refill canteen at waterpumps, rivers and lakes
 - Directly drink from rivers and lakes to save the water in your canteen
-- Seperate health, stamina and thirst config values for drinking from canteen and wild waters
+- Separate health, stamina and thirst config values for drinking from canteen and wild waters
 - Players can wash in rivers and lakes
 
 #### Dependencies
