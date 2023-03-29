@@ -28,6 +28,7 @@ Crouch and hold still in wild waters to show drink, wash and fill prompts.
 
 #### Credits
 - green_canteen
+- MaffenTV_Steffen : German Translation
 
 #### GitHub
 - https://github.com/JusCampin/oss_water

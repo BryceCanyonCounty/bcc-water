@@ -157,7 +157,6 @@ function PlayerStats()
     local player = PlayerPedId()
     local health = Citizen.InvokeNative(0x36731AC041289BB1, player, 0) -- GetAttributeCoreValue
     local stamina = Citizen.InvokeNative(0x36731AC041289BB1, player, 1) -- GetAttributeCoreValue
-    print()
     if IsWild then
         -- Wild Waters
         Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.wildHealth) -- SetAttributeCoreValue
