@@ -36,6 +36,7 @@ Citizen.CreateThread(function()
 	Citizen.Wait(2000)
 	VORPInv.RegisterUsableItem("canteen", function(data)
 		local _source = data.source
+        VORPInv.CloseInv(_source)
         TriggerClientEvent('oss_water:UseCanteen', _source, data)
 	end)
 end)
