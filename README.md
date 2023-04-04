@@ -2,7 +2,7 @@
 
 #### Description
 Water script for RedM servers using the [VORP framework](https://github.com/VORPCORE).
-Crouch and hold still in wild waters to show drink, wash and fill prompts.
+Crouch and hold still in wild waters to show drink, wash and fill prompts. See features for more details.
 
 #### Features
 - Carry a canteen of water to drink
