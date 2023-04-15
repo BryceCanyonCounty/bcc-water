@@ -161,12 +161,20 @@ function PlayerStats()
         -- Wild Waters
         Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.wildHealth) -- SetAttributeCoreValue
         Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.wildStamina) -- SetAttributeCoreValue
-        TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.wildThirst)
+        if Config.vorpMeta then
+            TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.vorpWildThirst)
+        else
+            TriggerEvent("fred:consume", 0, Config.fredWildThirst, 0, 0, 0.0, 0.0, 0.0, 0.0)
+        end
     else
         -- Canteen
         Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.health) -- SetAttributeCoreValue
         Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.stamina) -- SetAttributeCoreValue
-        TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.thirst)
+        if Config.vorpMeta then
+            TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.vorpThirst)
+        else
+            TriggerEvent("fred:consume", 0, Config.fredThirst, 0, 0, 0.0, 0.0, 0.0, 0.0)
+        end
     end
 end
 
