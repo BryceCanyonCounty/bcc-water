@@ -7,7 +7,7 @@ Crouch and hold still in wild waters to show drink, wash and fill prompts. See f
 #### Features
 - Carry a canteen of water to drink
 - Drink 4 times from a full canteen
-- Quenches thirst when using [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua)
+- Quenches thirst when using [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua) or [fred_metabolism](https://github.com/SirFreddie/fred_metabolism_free)
 - Refill canteen at waterpumps, rivers and lakes
 - Directly drink from rivers and lakes to save the water in your canteen
 - Separate health, stamina and thirst config values for drinking from canteen and wild waters
@@ -18,6 +18,7 @@ Crouch and hold still in wild waters to show drink, wash and fill prompts. See f
 - [vorp_inventory](https://github.com/VORPCORE/vorp_inventory-lua)
 - [vorp_utils](https://github.com/VORPCORE/vorp_utils)
 - [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua)
+- [fred_metabolism](https://github.com/SirFreddie/fred_metabolism_free)
 
 #### Installation
 - Add `oss_water` folder to your resources folder
