@@ -2,6 +2,8 @@ Config = {}
 
 Config.defaultlang = "en_lang"
 
+Config.vorpMeta = true -- Vorp Metabolism = true / Fred Metabolism Free = false
+
 -- Fill Canteen at Water Pumps and Wild Waters
 Config.fillKey = 0xB2F377E8 -- [F] - 0xB2F377E8
 
@@ -14,19 +16,33 @@ Config.drinkKey = 0x760A9C6F -- [G] - 0x760A9C6F
 -- Show / Hide Canteen Level Messages
 Config.showMessages = true
 
+---------------------------------------------------------------
+
 -- Boosts Drinking from Canteen
 Config.health = 10 -- Default: 10 / Value is 0 - 100
 
 Config.stamina = 20 -- Default: 20 / Value is 0 - 100
 
-Config.thirst = 500 -- Default: 500 / Value is 0 - 1000
+-- Using Vorp Metabolism
+Config.vorpThirst = 500 -- Default: 500 / Value is 0 - 1000
+
+-- Using Fred Metabolism Free
+Config.fredThirst = 50 -- Default: 50 / Value is 0 - 100
+
+---------------------------------------------------------------
 
 -- Boosts Drinking Directly from Wild Waters
 Config.wildHealth = 5 -- Default: 5 / Value is 0 - 100
 
 Config.wildStamina = 10 -- Default: 10 / Value is 0 - 100
 
-Config.wildThirst = 250 -- Default: 250 / Value is 0 - 1000
+-- Using Vorp Metabolism
+Config.vorpWildThirst = 250 -- Default: 250 / Value is 0 - 1000
+
+-- Using Fred Metabolism Free
+Config.fredWildThirst = 25 -- Default: 25 / Value is 0 - 100
+
+---------------------------------------------------------------
 
 Config.locations = { -- Wild Water Locations
     [1]  = { name = "Sea of Coronado",     hash = -247856387  },
