@@ -1,8 +1,8 @@
 # Water
 
 #### Description
-Water script for RedM servers using the [VORP framework](https://github.com/VORPCORE).
-Crouch and hold still in wild waters to show drink, wash and fill prompts. See features for more details.
+Water script for RedM servers using the [VORP](https://github.com/VORPCORE) framework.
+Add the canteen to a store or crafting station for players to buy or make. Fill your canteen at waterpumps while in town or **crouch and hold still** in wild waters to show drink, wash and fill prompts. See features for more details.
 
 #### Features
 - Carry a canteen of water to drink
@@ -16,7 +16,6 @@ Crouch and hold still in wild waters to show drink, wash and fill prompts. See f
 #### Dependencies
 - [vorp_core](https://github.com/VORPCORE/vorp-core-lua)
 - [vorp_inventory](https://github.com/VORPCORE/vorp_inventory-lua)
-- [vorp_utils](https://github.com/VORPCORE/vorp_utils)
 - [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua)
 - [fred_metabolism](https://github.com/SirFreddie/fred_metabolism_free)
 
