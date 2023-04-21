@@ -1,9 +1,12 @@
 local VORPcore = {}
-local VORPutils = {}
-local WaterPump
-local Fill
-local Wash
-local Drink
+-- Prompts
+local PumpPrompt
+local FillPrompt
+local WashPrompt
+local DrinkPrompt
+local PumpGroup = GetRandomIntInRange(0, 0xffffff)
+local WaterGroup = GetRandomIntInRange(0, 0xffffff)
+-- Water
 local Canteen
 local PumpAnim
 local Filling = false
@@ -14,18 +17,12 @@ TriggerEvent("getCore", function(core)
     VORPcore = core
 end)
 
-TriggerEvent("getUtils", function(utils)
-    VORPutils = utils
-end)
-
 Citizen.CreateThread(function()
     -- Start Prompts
-    local pumpPrompt = VORPutils.Prompts:SetupPromptGroup()
-    WaterPump = pumpPrompt:RegisterPrompt(_U("fill"), Config.fillKey, 1, 1, true, 'click')
-    local waterPrompts = VORPutils.Prompts:SetupPromptGroup()
-    Fill = waterPrompts:RegisterPrompt(_U("fill"), Config.fillKey, 1, 1, true, 'click')
-    Wash = waterPrompts:RegisterPrompt(_U("wash"), Config.washKey, 1, 1, true, 'click')
-    Drink = waterPrompts:RegisterPrompt(_U("drink"), Config.drinkKey, 1, 1, true, 'click')
+    Waterpump()
+    FillCanteen()
+    Wash()
+    DrinkWater()
     --Start Water
     while true do
         Citizen.Wait(0)
@@ -38,8 +35,9 @@ Citizen.CreateThread(function()
             local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 1.0, GetHashKey("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
             if pumpLoc and IsPedOnFoot(player) then
                 sleep = false
-                pumpPrompt:ShowGroup("Water Pump")
-                if WaterPump:HasCompleted() then
+                local waterpump = CreateVarString(10, 'LITERAL_STRING', "Waterpump")
+                PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
+                if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpPrompt) then -- UiPromptHasStandardModeCompleted
                     PumpAnim = true
                     TriggerServerEvent('oss_water:CheckEmpty')
                 end
@@ -51,20 +49,21 @@ Citizen.CreateThread(function()
                         if IsEntityInWater(player) and Citizen.InvokeNative(0xD5FE956C70FF370B, player) then -- GetPedCrouchMovement
                             if Citizen.InvokeNative(0xAC29253EEF8F0180, player) then -- IsPedStill
                                 sleep = false
-                                waterPrompts:ShowGroup(Config.locations[k].name)
-                                if Fill:HasCompleted() then
+                                local waterSource = CreateVarString(10, 'LITERAL_STRING', Config.locations[k].name)
+                                PromptSetActiveGroupThisFrame(WaterGroup, waterSource)
+                                if Citizen.InvokeNative(0xC92AC953F0A982AE, FillPrompt) then -- UiPromptHasStandardModeCompleted
                                     Filling = true
                                     PumpAnim = false
                                     TriggerServerEvent('oss_water:CheckEmpty')
                                     break
                                 end
-                                if Wash:HasCompleted() then
+                                if Citizen.InvokeNative(0xC92AC953F0A982AE, WashPrompt) then -- UiPromptHasStandardModeCompleted
                                     if not Filling then
                                         WashPlayer()
                                     end
                                     break
                                 end
-                                if Drink:HasCompleted() then
+                                if Citizen.InvokeNative(0xC92AC953F0A982AE, DrinkPrompt) then -- UiPromptHasStandardModeCompleted
                                     if not Filling then
                                         WildDrink()
                                     end
@@ -81,6 +80,7 @@ Citizen.CreateThread(function()
         end
     end
 end)
+
 -- Fill Canteen Animations
 RegisterNetEvent('oss_water:FillCanteen')
 AddEventHandler('oss_water:FillCanteen', function()
@@ -106,6 +106,7 @@ AddEventHandler('oss_water:FillCanteen', function()
         VORPcore.NotifyRightTip(_U("full"), 5000)
     end
 end)
+
 -- Drink from Canteen
 RegisterNetEvent('oss_water:Drink')
 AddEventHandler('oss_water:Drink', function(level)
@@ -124,6 +125,7 @@ AddEventHandler('oss_water:Drink', function(level)
     end
     IsWild = false
     PlayerStats()
+
     -- Canteen Level Messages
     local levelMessage = {
         [1] = _U("level_1"),
@@ -137,12 +139,14 @@ AddEventHandler('oss_water:Drink', function(level)
         end
     end
 end)
+
 -- Drink Directly from Wild Waters
 function WildDrink()
     PlayAnim("amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c", "idle_h")
     IsWild = true
     PlayerStats()
 end
+
 -- Wash Player in Wild Waters
 function WashPlayer()
     local player = PlayerPedId()
@@ -152,6 +156,7 @@ function WashPlayer()
     Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
     Citizen.InvokeNative(0xE3144B932DFDFF65, player, 0.0, -1, 1, 1) -- SetPedDirtCleaned
 end
+
 -- Boosts from Drinking
 function PlayerStats()
     local player = PlayerPedId()
@@ -216,6 +221,63 @@ function LoadModel(model)
     end
 end
 
+-- Menu Prompts
+function Waterpump()
+    local str = _U("fill")
+    PumpPrompt = PromptRegisterBegin()
+    PromptSetControlAction(PumpPrompt, Config.fillKey)
+    str = CreateVarString(10, 'LITERAL_STRING', str)
+    PromptSetText(PumpPrompt, str)
+    PromptSetEnabled(PumpPrompt, 1)
+    PromptSetVisible(PumpPrompt, 1)
+    PromptSetStandardMode(PumpPrompt, 1)
+    PromptSetGroup(PumpPrompt, PumpGroup)
+    Citizen.InvokeNative(0xC5F428EE08FA7F2C, PumpPrompt, true) -- UiPromptSetUrgentPulsingEnabled
+    PromptRegisterEnd(PumpPrompt)
+end
+
+function FillCanteen()
+    local str = _U("fill")
+    FillPrompt = PromptRegisterBegin()
+    PromptSetControlAction(FillPrompt, Config.fillKey)
+    str = CreateVarString(10, 'LITERAL_STRING', str)
+    PromptSetText(FillPrompt, str)
+    PromptSetEnabled(FillPrompt, 1)
+    PromptSetVisible(FillPrompt, 1)
+    PromptSetStandardMode(FillPrompt, 1)
+    PromptSetGroup(FillPrompt, WaterGroup)
+    Citizen.InvokeNative(0xC5F428EE08FA7F2C, FillPrompt, true) -- UiPromptSetUrgentPulsingEnabled
+    PromptRegisterEnd(FillPrompt)
+end
+
+function Wash()
+    local str = _U("wash")
+    WashPrompt = PromptRegisterBegin()
+    PromptSetControlAction(WashPrompt, Config.washKey)
+    str = CreateVarString(10, 'LITERAL_STRING', str)
+    PromptSetText(WashPrompt, str)
+    PromptSetEnabled(WashPrompt, 1)
+    PromptSetVisible(WashPrompt, 1)
+    PromptSetStandardMode(WashPrompt, 1)
+    PromptSetGroup(WashPrompt, WaterGroup)
+    Citizen.InvokeNative(0xC5F428EE08FA7F2C, WashPrompt, true) -- UiPromptSetUrgentPulsingEnabled
+    PromptRegisterEnd(WashPrompt)
+end
+
+function DrinkWater()
+    local str = _U("drink")
+    DrinkPrompt = PromptRegisterBegin()
+    PromptSetControlAction(DrinkPrompt, Config.drinkKey)
+    str = CreateVarString(10, 'LITERAL_STRING', str)
+    PromptSetText(DrinkPrompt, str)
+    PromptSetEnabled(DrinkPrompt, 1)
+    PromptSetVisible(DrinkPrompt, 1)
+    PromptSetStandardMode(DrinkPrompt, 1)
+    PromptSetGroup(DrinkPrompt, WaterGroup)
+    Citizen.InvokeNative(0xC5F428EE08FA7F2C, DrinkPrompt, true) -- UiPromptSetUrgentPulsingEnabled
+    PromptRegisterEnd(DrinkPrompt)
+end
+
 AddEventHandler('onResourceStop', function(resourceName)
     if (GetCurrentResourceName() ~= resourceName) then
         return
@@ -224,8 +286,8 @@ AddEventHandler('onResourceStop', function(resourceName)
     if Canteen then
         DeleteObject(Canteen)
     end
-    WaterPump:DeletePrompt()
-    Fill:DeletePrompt()
-    Wash:DeletePrompt()
-    Drink:DeletePrompt()
+    PromptDelete(PumpPrompt)
+    PromptDelete(FillPrompt)
+    PromptDelete(WashPrompt)
+    PromptDelete(DrinkPrompt)
 end)
