@@ -32,14 +32,14 @@ Citizen.CreateThread(function()
         local dead = IsEntityDead(player)
         if not dead then
             -- Waterpumps
-            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 1.0, GetHashKey("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
+            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 1.0, joaat("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
             if pumpLoc and IsPedOnFoot(player) then
                 sleep = false
                 local waterpump = CreateVarString(10, 'LITERAL_STRING', "Waterpump")
                 PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
                 if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpPrompt) then -- UiPromptHasStandardModeCompleted
                     PumpAnim = true
-                    TriggerServerEvent('oss_water:CheckEmpty')
+                    TriggerServerEvent('bcc-water:CheckEmpty')
                 end
             else
                 -- Wild Waters
@@ -54,7 +54,7 @@ Citizen.CreateThread(function()
                                 if Citizen.InvokeNative(0xC92AC953F0A982AE, FillPrompt) then -- UiPromptHasStandardModeCompleted
                                     Filling = true
                                     PumpAnim = false
-                                    TriggerServerEvent('oss_water:CheckEmpty')
+                                    TriggerServerEvent('bcc-water:CheckEmpty')
                                     break
                                 end
                                 if Citizen.InvokeNative(0xC92AC953F0A982AE, WashPrompt) then -- UiPromptHasStandardModeCompleted
@@ -82,14 +82,14 @@ Citizen.CreateThread(function()
 end)
 
 -- Fill Canteen Animations
-RegisterNetEvent('oss_water:FillCanteen')
-AddEventHandler('oss_water:FillCanteen', function()
+RegisterNetEvent('bcc-water:FillCanteen')
+AddEventHandler('bcc-water:FillCanteen', function()
     local player = PlayerPedId()
     Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     if not PumpAnim then
         local coords = GetEntityCoords(player)
         local boneIndex = GetEntityBoneIndexByName(player, "SKEL_R_HAND")
-        local modelHash = GetHashKey("p_cs_canteen_hercule")
+        local modelHash = joaat("p_cs_canteen_hercule")
         LoadModel(modelHash)
         Canteen = CreateObject(modelHash, coords.x, coords.y, coords.z, true, false, false)
         SetEntityVisible(Canteen, true)
@@ -108,16 +108,16 @@ AddEventHandler('oss_water:FillCanteen', function()
 end)
 
 -- Drink from Canteen
-RegisterNetEvent('oss_water:Drink')
-AddEventHandler('oss_water:Drink', function(level)
+RegisterNetEvent('bcc-water:Drink')
+AddEventHandler('bcc-water:Drink', function(level)
     local player = PlayerPedId()
     Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, false) -- HidePedWeapons
     if Citizen.InvokeNative(0x6D9F5FAA7488BA46, player) then -- IsPedMale
-        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
+        TaskStartScenarioInPlace(player, joaat('WORLD_HUMAN_DRINK_FLASK'), -1, true, false, false, false)
         Wait(15000)
         ClearPedTasks(player, true, true)
     else
-        TaskStartScenarioInPlace(player, GetHashKey('WORLD_HUMAN_COFFEE_DRINK'), -1, true, false, false, false)
+        TaskStartScenarioInPlace(player, joaat('WORLD_HUMAN_COFFEE_DRINK'), -1, true, false, false, false)
         Wait(15000)
         ClearPedTasks(player, true, true)
         Wait(5000)
@@ -183,15 +183,15 @@ function PlayerStats()
     end
 end
 
-RegisterNetEvent('oss_water:Filling')
-AddEventHandler('oss_water:Filling', function()
+RegisterNetEvent('bcc-water:Filling')
+AddEventHandler('bcc-water:Filling', function()
     Filling = false
 end)
 
-RegisterNetEvent('oss_water:UseCanteen')
-AddEventHandler('oss_water:UseCanteen', function(data)
+RegisterNetEvent('bcc-water:UseCanteen')
+AddEventHandler('bcc-water:UseCanteen', function(data)
     if UseCanteen then
-        TriggerServerEvent('oss_water:UpdateCanteen', data)
+        TriggerServerEvent('bcc-water:UpdateCanteen', data)
         UseCanteen = false
         Wait(15000)
         UseCanteen = true

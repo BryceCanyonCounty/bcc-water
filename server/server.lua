@@ -6,8 +6,8 @@ end)
 
 VORPInv = exports.vorp_inventory:vorp_inventoryApi()
 
-RegisterNetEvent("oss_water:CheckEmpty")
-AddEventHandler("oss_water:CheckEmpty", function()
+RegisterNetEvent("bcc-water:CheckEmpty")
+AddEventHandler("bcc-water:CheckEmpty", function()
 	local _source = source
     local canteen = VORPInv.getItem(_source, "canteen")
     if canteen ~= nil then
@@ -22,11 +22,11 @@ AddEventHandler("oss_water:CheckEmpty", function()
                 VORPInv.addItem(_source, "canteen", 1, {description = "Level : Full", level = 5})
             else
                 VORPcore.NotifyRightTip(_source, _U("not_empty"), 5000)
-                TriggerClientEvent('oss_water:Filling', _source)
+                TriggerClientEvent('bcc-water:Filling', _source)
                 return
             end
         end
-        TriggerClientEvent("oss_water:FillCanteen", _source)
+        TriggerClientEvent("bcc-water:FillCanteen", _source)
     else
         VORPcore.NotifyRightTip(_source, _U("needcanteen"), 5000)
     end
@@ -35,11 +35,11 @@ end)
 VORPInv.RegisterUsableItem("canteen", function(data)
     local _source = data.source
     VORPInv.CloseInv(_source)
-    TriggerClientEvent('oss_water:UseCanteen', _source, data)
+    TriggerClientEvent('bcc-water:UseCanteen', _source, data)
 end)
 
-RegisterNetEvent("oss_water:UpdateCanteen")
-AddEventHandler("oss_water:UpdateCanteen", function(data)
+RegisterNetEvent("bcc-water:UpdateCanteen")
+AddEventHandler("bcc-water:UpdateCanteen", function(data)
     local _source = data.source
     local canteen = VORPInv.getItem(_source, "canteen")
     local meta = canteen["metadata"]
@@ -77,6 +77,6 @@ AddEventHandler("oss_water:UpdateCanteen", function(data)
             VORPcore.NotifyRightTip(_source, _U("level_1"), 5000)
             return
         elseif level > 1 then
-            TriggerClientEvent('oss_water:Drink', _source, message)
+            TriggerClientEvent('bcc-water:Drink', _source, message)
         end
 end)

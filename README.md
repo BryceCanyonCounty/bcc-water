@@ -16,19 +16,15 @@ Add the canteen to a store or crafting station for players to buy or make. Fill 
 #### Dependencies
 - [vorp_core](https://github.com/VORPCORE/vorp-core-lua)
 - [vorp_inventory](https://github.com/VORPCORE/vorp_inventory-lua)
-- [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua)
-- [fred_metabolism](https://github.com/SirFreddie/fred_metabolism_free)
+- [vorp_metabolism](https://github.com/VORPCORE/vorp_metabolism-lua) or [fred_metabolism](https://github.com/SirFreddie/fred_metabolism_free)
 
 #### Installation
-- Add `oss_water` folder to your resources folder
-- Add `ensure oss_water` to your `resources.cfg`
-- Run the included database file `oss_water.sql`
+- Add `bcc-water` folder to your resources folder
+- Add `ensure bcc-water` to your `resources.cfg`
+- Run the included database file `water.sql`
 - Add canteen image to: `...\vorp_inventory\html\img`
 - Add canteen to a store or crafting station for player use
 
 #### Credits
 - green_canteen
 - MaffenTV_Steffen : German Translation
-
-#### GitHub
-- https://github.com/JusCampin/oss_water
