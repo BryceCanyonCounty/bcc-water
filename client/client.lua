@@ -32,14 +32,23 @@ Citizen.CreateThread(function()
         local dead = IsEntityDead(player)
         if not dead then
             -- Waterpumps
-            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 1.0, joaat("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
-            if pumpLoc and IsPedOnFoot(player) then
-                sleep = false
-                local waterpump = CreateVarString(10, 'LITERAL_STRING', "Waterpump")
-                PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
-                if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpPrompt) then -- UiPromptHasStandardModeCompleted
-                    PumpAnim = true
-                    TriggerServerEvent('bcc-water:CheckEmpty')
+            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat("p_waterpump01x"), 0) -- DoesObjectOfTypeExistAtCoords
+            local wellLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat("p_wellpumpnbx01x"), 0) -- DoesObjectOfTypeExistAtCoords
+            if pumpLoc or wellLoc then
+                if IsPedOnFoot(player) then
+                    sleep = false
+                    if Config.usePrompt then
+                        local waterpump = CreateVarString(10, 'LITERAL_STRING', "Waterpump")
+                        PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
+                        if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpPrompt) then -- UiPromptHasStandardModeCompleted
+                            PumpWater()
+                        end
+                    else
+                        DrawText3Ds(coords.x, coords.y, coords.z, "~t6~F~q~ - ".. _U("fill"))
+                        if IsControlJustReleased(0, Config.fillKey) then -- [F]
+                            PumpWater()
+                        end
+                    end
                 end
             else
                 -- Wild Waters
@@ -106,6 +115,12 @@ AddEventHandler('bcc-water:FillCanteen', function()
         VORPcore.NotifyRightTip(_U("full"), 5000)
     end
 end)
+
+
+function PumpWater()
+    PumpAnim = true
+    TriggerServerEvent('bcc-water:CheckEmpty')
+end
 
 -- Drink from Canteen
 RegisterNetEvent('bcc-water:Drink')
@@ -276,6 +291,16 @@ function DrinkWater()
     PromptSetGroup(DrinkPrompt, WaterGroup)
     Citizen.InvokeNative(0xC5F428EE08FA7F2C, DrinkPrompt, true) -- UiPromptSetUrgentPulsingEnabled
     PromptRegisterEnd(DrinkPrompt)
+end
+
+function DrawText3Ds(x, y, z, text)
+    local _, _x, _y = GetScreenCoordFromWorldCoord(x, y, z)
+    SetTextScale(0.35, 0.35)
+    SetTextFontForCurrentCommand(9)
+    SetTextColor(255, 255, 255, 215)
+    local str = CreateVarString(10, "LITERAL_STRING", text, Citizen.ResultAsLong())
+    SetTextCentre(1)
+    DisplayText(str, _x, _y)
 end
 
 AddEventHandler('onResourceStop', function(resourceName)
