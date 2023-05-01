@@ -2,6 +2,8 @@ Config = {}
 
 Config.defaultlang = "en_lang"
 
+Config.usePrompt = true -- true = Show Prompt Button at Pumps / false = Show Text at Pumps (no button)
+
 Config.vorpMeta = true -- Vorp Metabolism = true / Fred Metabolism Free = false
 
 -- Fill Canteen at Water Pumps and Wild Waters
