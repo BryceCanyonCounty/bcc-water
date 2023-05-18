@@ -4,7 +4,7 @@ Config.defaultlang = "en_lang"
 
 Config.usePrompt = true -- true = Show Prompt Button at Pumps / false = Show Text at Pumps (no button)
 
-Config.vorpMeta = true -- Vorp Metabolism = true / Fred Metabolism Free = false
+Config.meta = 1 -- Vorp Metabolism = 1 / Fred Metabolism Free = 2 / Outsider Needs = 3
 
 -- Fill Canteen at Water Pumps and Wild Waters
 Config.fillKey = 0xB2F377E8 -- [F] - 0xB2F377E8
@@ -28,8 +28,8 @@ Config.stamina = 20 -- Default: 20 / Value is 0 - 100
 -- Using Vorp Metabolism
 Config.vorpThirst = 500 -- Default: 500 / Value is 0 - 1000
 
--- Using Fred Metabolism Free
-Config.fredThirst = 50 -- Default: 50 / Value is 0 - 100
+-- Using Fred Metabolism Free or Outsider Needs
+Config.otherThirst = 50 -- Default: 50 / Value is 0 - 100
 
 ---------------------------------------------------------------
 
@@ -41,8 +41,8 @@ Config.wildStamina = 10 -- Default: 10 / Value is 0 - 100
 -- Using Vorp Metabolism
 Config.vorpWildThirst = 250 -- Default: 250 / Value is 0 - 1000
 
--- Using Fred Metabolism Free
-Config.fredWildThirst = 25 -- Default: 25 / Value is 0 - 100
+-- Using Fred Metabolism Free or Outsider Needs
+Config.otherWildThirst = 25 -- Default: 25 / Value is 0 - 100
 
 ---------------------------------------------------------------
 

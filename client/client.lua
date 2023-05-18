@@ -116,7 +116,6 @@ AddEventHandler('bcc-water:FillCanteen', function()
     end
 end)
 
-
 function PumpWater()
     PumpAnim = true
     TriggerServerEvent('bcc-water:CheckEmpty')
@@ -177,24 +176,44 @@ function PlayerStats()
     local player = PlayerPedId()
     local health = Citizen.InvokeNative(0x36731AC041289BB1, player, 0) -- GetAttributeCoreValue
     local stamina = Citizen.InvokeNative(0x36731AC041289BB1, player, 1) -- GetAttributeCoreValue
-    if IsWild then
-        -- Wild Waters
-        Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.wildHealth) -- SetAttributeCoreValue
-        Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.wildStamina) -- SetAttributeCoreValue
-        if Config.vorpMeta then
-            TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.vorpWildThirst)
+    local meta = tonumber(Config.meta)
+    local metaUpdate = {
+        [1] = function()
+            if IsWild then
+                TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.vorpWildThirst)
+            else
+                TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.vorpThirst)
+            end
+        end,
+        [2] = function()
+            if IsWild then
+                TriggerEvent("fred:consume", 0, Config.otherWildThirst, 0, 0.0, 0.0, 0, 0.0, 0.0)
+            else
+                TriggerEvent("fred:consume", 0, Config.otherThirst, 0, 0.0, 0.0, 0, 0.0, 0.0)
+            end
+        end,
+        [3] = function()
+            local wild
+            if IsWild then
+                wild = true
+                TriggerServerEvent('outsider_needs:Thirst', wild)
+            else
+                wild = false
+                TriggerServerEvent('outsider_needs:Thirst', wild)
+            end
+        end
+    }
+    if metaUpdate[meta] then
+        metaUpdate[meta]()
+        if IsWild then
+            Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.wildHealth) -- SetAttributeCoreValue
+            Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.wildStamina) -- SetAttributeCoreValue
         else
-            TriggerEvent("fred:consume", 0, Config.fredWildThirst, 0, 0, 0.0, 0.0, 0.0, 0.0)
+            Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.health) -- SetAttributeCoreValue
+            Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.stamina) -- SetAttributeCoreValue
         end
     else
-        -- Canteen
-        Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, health + Config.health) -- SetAttributeCoreValue
-        Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, stamina + Config.stamina) -- SetAttributeCoreValue
-        if Config.vorpMeta then
-            TriggerEvent('vorpmetabolism:changeValue', "Thirst", Config.vorpThirst)
-        else
-            TriggerEvent("fred:consume", 0, Config.fredThirst, 0, 0, 0.0, 0.0, 0.0, 0.0)
-        end
+        print('Check Config.meta setting for correct metabolism value')
     end
 end
 
