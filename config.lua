@@ -2,21 +2,17 @@ Config = {}
 
 Config.defaultlang = "en_lang"
 
-Config.usePrompt = true -- true = Show Prompt Button at Pumps / false = Show Text at Pumps (no button)
+Config.app = 1 -- Vorp Metabolism = 1 / Fred Metabolism Free = 2 / Outsider Needs = 3
 
-Config.meta = 1 -- Vorp Metabolism = 1 / Fred Metabolism Free = 2 / Outsider Needs = 3
+Config.keys = {
+    fill = 0xB2F377E8, -- [F] Fill Canteen at Water Pumps and Wild Waters
+    wash = 0xD9D0E1C0, -- [Space] Wash Player in Wild Waters
+    drink = 0x760A9C6F -- [G] Drink from Wild Waters
+}
 
--- Fill Canteen at Water Pumps and Wild Waters
-Config.fillKey = 0xB2F377E8 -- [F] - 0xB2F377E8
+Config.usePrompt = true -- true = Show Prompt Button at Water Pumps / false = Show Text at Water Pumps (no button)
 
--- Wash Player in Wild Waters
-Config.washKey = 0xD9D0E1C0 -- [Space] - 0xD9D0E1C0
-
--- Drink from Wild Waters
-Config.drinkKey = 0x760A9C6F -- [G] - 0x760A9C6F
-
--- Show / Hide Canteen Level Messages
-Config.showMessages = true
+Config.showMessages = true -- Show / Hide Canteen Level Messages
 
 ---------------------------------------------------------------
 
@@ -25,11 +21,7 @@ Config.health = 10 -- Default: 10 / Value is 0 - 100
 
 Config.stamina = 20 -- Default: 20 / Value is 0 - 100
 
--- Using Vorp Metabolism
-Config.vorpThirst = 500 -- Default: 500 / Value is 0 - 1000
-
--- Using Fred Metabolism Free or Outsider Needs
-Config.otherThirst = 50 -- Default: 50 / Value is 0 - 100
+Config.thirst = 50 -- Default: 50 / Value is 0 - 100
 
 ---------------------------------------------------------------
 
@@ -38,11 +30,16 @@ Config.wildHealth = 5 -- Default: 5 / Value is 0 - 100
 
 Config.wildStamina = 10 -- Default: 10 / Value is 0 - 100
 
--- Using Vorp Metabolism
-Config.vorpWildThirst = 250 -- Default: 250 / Value is 0 - 1000
+Config.wildThirst = 25 -- Default: 25 / Value is 0 - 100
 
--- Using Fred Metabolism Free or Outsider Needs
-Config.otherWildThirst = 25 -- Default: 25 / Value is 0 - 100
+---------------------------------------------------------------
+
+-- Translate Canteen Metadata
+Config.lang = {
+    level = "Level",
+    empty = "Empty",
+    full = "Full"
+}
 
 ---------------------------------------------------------------
 
