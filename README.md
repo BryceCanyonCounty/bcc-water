@@ -1,4 +1,4 @@
-# Water
+# bcc-water
 
 #### Description
 Water script for RedM servers using the [VORP](https://github.com/VORPCORE) framework.
