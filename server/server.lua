@@ -85,14 +85,14 @@ RegisterNetEvent('bcc-water:UpdateCanteen', function(data)
         end
 end)
 
-    RegisterNetEvent('outsider_needs:Thirst', function(wild)
-        local _source = source
-        local data = {}
-        if wild then
-            data = {water = Config.WildThirst}
-        else
-            data = {water = Config.Thirst}
-        end
-        Needs.addStats(_source, data)
-    end)
+RegisterNetEvent('outsider_needs:Thirst', function(wild)
+    local _source = source
+    local data = {}
+    if wild then
+        data = {water = Config.WildThirst}
+    else
+        data = {water = Config.Thirst}
+    end
+    Needs.addStats(_source, data)
+end)
 
