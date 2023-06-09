@@ -1,11 +1,16 @@
 local VORPcore = {}
 local VORPInv = {}
+local Needs = {}
 
 TriggerEvent('getCore', function(core)
     VORPcore = core
 end)
 
 VORPInv = exports.vorp_inventory:vorp_inventoryApi()
+
+TriggerEvent('Outsider_Needs', function(cb)
+    Needs = cb
+end)
 
 RegisterNetEvent('bcc-water:CheckEmpty', function()
 	local _source = source
@@ -80,20 +85,14 @@ RegisterNetEvent('bcc-water:UpdateCanteen', function(data)
         end
 end)
 
-if tonumber(Config.app) == 3 then
-    local Needs = {}
-    TriggerEvent('Outsider_Needs', function(cb)
-        Needs = cb
-    end)
+RegisterNetEvent('outsider_needs:Thirst', function(wild)
+    local _source = source
+    local data = {}
+    if wild then
+        data = {water = Config.WildThirst}
+    else
+        data = {water = Config.Thirst}
+    end
+    Needs.addStats(_source, data)
+end)
 
-    RegisterNetEvent('outsider_needs:Thirst', function(wild)
-        local _source = source
-        local data = {}
-        if wild then
-            data = {water = Config.WildThirst}
-        else
-            data = {water = Config.Thirst}
-        end
-        Needs.addStats(_source, data)
-    end)
-end
