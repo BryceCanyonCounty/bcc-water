@@ -89,9 +89,9 @@ RegisterNetEvent('outsider_needs:Thirst', function(wild)
     local _source = source
     local data = {}
     if wild then
-        data = {water = Config.WildThirst}
+        data = {water = Config.wildThirst}
     else
-        data = {water = Config.Thirst}
+        data = {water = Config.thirst}
     end
     Needs.addStats(_source, data)
 end)
