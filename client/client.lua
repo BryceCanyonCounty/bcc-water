@@ -196,13 +196,17 @@ function PlayerStats()
             end
         end,
         [3] = function()
-            local wild
             if IsWild then
-                wild = true
-                TriggerServerEvent('outsider_needs:Thirst', wild)
+                TriggerServerEvent('outsider_needs:Thirst', true)
             else
-                wild = false
-                TriggerServerEvent('outsider_needs:Thirst', wild)
+                TriggerServerEvent('outsider_needs:Thirst', false)
+            end
+        end,
+        [4] = function()
+            if IsWild then
+                TriggerEvent('fred_meta:consume', 0, Config.wildThirst, 0, 0.0, 0.0, 0, 0.0, 0.0)
+            else
+                TriggerEvent('fred_meta:consume', 0, Config.thirst, 0, 0.0, 0.0, 0, 0.0, 0.0)
             end
         end
     }
@@ -236,7 +240,7 @@ function PlayerStats()
             return
         end
     else
-        print('Check Config.meta setting for correct metabolism value')
+        print('Check Config.app setting for correct metabolism value')
     end
 end
 
