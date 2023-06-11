@@ -2,7 +2,7 @@ Config = {}
 
 Config.defaultlang = "en_lang"
 
-Config.app = 1 -- Vorp Metabolism = 1 / Fred Metabolism Free = 2 / Outsider Needs = 3
+Config.app = 1 -- Vorp Metabolism = 1 / Fred Metabolism Free = 2 / Outsider Needs = 3 / Fred Metabolism Paid = 4
 
 Config.keys = {
     fill = 0xB2F377E8, -- [F] Fill Canteen at Water Pumps and Wild Waters
