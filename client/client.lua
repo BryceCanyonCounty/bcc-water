@@ -146,6 +146,7 @@ RegisterNetEvent('bcc-water:FillCanteen', function()
         end
         ClearPedTasks(PlayerPedId())
     end
+
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U('full'), 5000)
     end
