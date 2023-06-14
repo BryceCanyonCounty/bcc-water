@@ -57,7 +57,7 @@ CreateThread(function()
                     else
                         if not UsePump then
                             DrawText3Ds(coords.x, coords.y, coords.z,
-                                '~t6~F~q~ - ' .. _U('fill') .. " " .. _U('fillbucket'))
+                                '~t6~F~q~ - ' .. _U('fill') .. " " .. '~t6~G~q~ - '.. _U('fillbucket'))
                         end
                         if IsControlJustReleased(0, Config.keys.fill) then -- [F]
                             PumpWater()
