@@ -34,6 +34,7 @@ RegisterNetEvent('bcc-water:CheckEmpty', function()
         TriggerClientEvent('bcc-water:FillCanteen', _source)
     else
         VORPcore.NotifyRightTip(_source, _U('needcanteen'), 5000)
+        TriggerClientEvent('bcc-water:Filling', _source)
     end
 end)
 
