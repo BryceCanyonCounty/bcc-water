@@ -1,7 +1,7 @@
 ---------------------------------- ENGLISH -------------------------------------------
 Locales["en_lang"] = {
-
     fill = "Fill Canteen",
+    fillbucket = "Fill Bucket",
     wash = "Wash",
     drink = "Drink",
     full = "Your canteen is ~o~full",
@@ -11,5 +11,9 @@ Locales["en_lang"] = {
     message_1 = "Your canteen is ~o~empty~q~!",
     not_empty = "Your canteen is ~o~not ~q~empty",
     cantfill = "You can't fill your canteen here",
-    needcanteen = "You need a canteen!"
+    needcanteen = "You need a canteen!",
+    needbucket = "You need a empty bucket!",
+    filledbucket = "Filled Bucket",
+
+
 }

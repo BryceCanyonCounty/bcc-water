@@ -2,6 +2,7 @@ local VORPcore = {}
 -- Prompts
 local PumpPrompt
 local FillPrompt
+local FillBucketPrompt
 local WashPrompt
 local DrinkPrompt
 local PumpGroup = GetRandomIntInRange(0, 0xffffff)
@@ -12,6 +13,7 @@ local PumpAnim
 local Filling = false
 local IsWild
 local UseCanteen = true
+local UsePump = false
 
 TriggerEvent('getCore', function(core)
     VORPcore = core
@@ -21,6 +23,7 @@ CreateThread(function()
     -- Start Prompts
     Waterpump()
     FillCanteen()
+    FillBucket()
     Wash()
     DrinkWater()
     --Start Water
@@ -32,21 +35,36 @@ CreateThread(function()
         local dead = IsEntityDead(player)
         if not dead then
             -- Waterpumps
-            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_waterpump01x'), 0) -- DoesObjectOfTypeExistAtCoords
-            local wellLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_wellpumpnbx01x'), 0) -- DoesObjectOfTypeExistAtCoords
+            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75,
+                joaat('p_waterpump01x'), 0)   -- DoesObjectOfTypeExistAtCoords
+            local wellLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75,
+                joaat('p_wellpumpnbx01x'), 0) -- DoesObjectOfTypeExistAtCoords
             if pumpLoc or wellLoc then
                 if IsPedOnFoot(player) then
                     sleep = false
                     if Config.usePrompt then
                         local waterpump = CreateVarString(10, 'LITERAL_STRING', 'Waterpump')
-                        PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
+                        if not UsePump then
+                            PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
+                        end
                         if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpPrompt) then -- UiPromptHasStandardModeCompleted
                             PumpWater()
                         end
+                        if Citizen.InvokeNative(0xC92AC953F0A982AE, FillBucketPrompt) then -- UiPromptHasStandardModeCompleted
+                            TriggerServerEvent('bcc-water:WateringBucketCheck')
+                            UsePump = true
+                        end
                     else
-                        DrawText3Ds(coords.x, coords.y, coords.z, '~t6~F~q~ - '.. _U('fill'))
+                        if not UsePump then
+                            DrawText3Ds(coords.x, coords.y, coords.z,
+                                '~t6~F~q~ - ' .. _U('fill') .. " " .. _U('fillbucket'))
+                        end
                         if IsControlJustReleased(0, Config.keys.fill) then -- [F]
                             PumpWater()
+                        end
+                        if IsControlJustReleased(0, Config.keys.fillbucket) then -- [G]
+                            TriggerServerEvent('bcc-water:WateringBucketCheck')
+                            UsePump = true
                         end
                     end
                 end
@@ -56,7 +74,7 @@ CreateThread(function()
                 for k, _ in pairs(Config.locations) do
                     if water == Config.locations[k].hash and IsPedOnFoot(player) then
                         if IsEntityInWater(player) and Citizen.InvokeNative(0xD5FE956C70FF370B, player) then -- GetPedCrouchMovement
-                            if Citizen.InvokeNative(0xAC29253EEF8F0180, player) then -- IsPedStill
+                            if Citizen.InvokeNative(0xAC29253EEF8F0180, player) then                         -- IsPedStill
                                 sleep = false
                                 local waterSource = CreateVarString(10, 'LITERAL_STRING', Config.locations[k].name)
                                 PromptSetActiveGroupThisFrame(WaterGroup, waterSource)
@@ -103,7 +121,8 @@ RegisterNetEvent('bcc-water:FillCanteen', function()
         SetEntityVisible(Canteen, true)
         SetEntityAlpha(Canteen, 255, false)
         SetModelAsNoLongerNeeded(modelHash)
-        AttachEntityToEntity(Canteen, player, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, true, true, false, true, 2, true)
+        AttachEntityToEntity(Canteen, player, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, true, true, false, true, 2,
+            true)
         PlayAnim('amb_work@world_human_crouch_inspect@male_c@idle_a', 'idle_a')
         DeleteObject(Canteen)
         Filling = false
@@ -126,10 +145,34 @@ RegisterNetEvent('bcc-water:FillCanteen', function()
             end
         end
         ClearPedTasks(PlayerPedId())
-        end
+    end
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U('full'), 5000)
     end
+end)
+
+RegisterNetEvent('bcc-water:pumpbucket')
+AddEventHandler('bcc-water:pumpbucket', function()
+    local DataStruct = DataView.ArrayBuffer(256 * 4)
+    local is_data_exists = Citizen.InvokeNative(0x345EC3B7EBDE1CB5, GetEntityCoords(PlayerPedId()), 2.0,
+        DataStruct:Buffer(), 10)
+    if is_data_exists ~= false then
+        for i = 1, 1 do
+            local scenario = DataStruct:GetInt32(8 * i)
+            local scenario_hash = Citizen.InvokeNative(0xA92450B5AE687AAF, scenario)
+            if GetHashKey("PROP_HUMAN_PUMP_WATER") == scenario_hash or GetHashKey("PROP_HUMAN_PUMP_WATER_BUCKET") == scenario_hash then
+                ClearPedTasksImmediately(PlayerPedId())
+                Citizen.InvokeNative(0xFCCC886EDE3C63EC, PlayerPedId(), false, true)
+                TaskUseScenarioPoint(PlayerPedId(), scenario, "", -1.0, true, false, 0, false, -1.0, true)
+                Wait(15000)
+                TriggerServerEvent('bcc-water:RefillWateringCan')
+                break
+            end
+        end
+    end
+    ClearPedTasksImmediately(PlayerPedId())
+
+    UsePump = false
 end)
 
 function PumpWater()
@@ -155,7 +198,8 @@ RegisterNetEvent('bcc-water:Drink', function(level)
     SetEntityAlpha(Canteen, 255, false)
     SetModelAsNoLongerNeeded(modelHash)
     TaskPlayAnim(player, dict, anim, 1.0, 1.0, 5000, 31, 0.0, false, false, false)
-    AttachEntityToEntity(Canteen, player, boneIndex, 0.02, 0.028, 0.001, 15.0, 175.0, 0.0, true, true, false, true, 1, true)
+    AttachEntityToEntity(Canteen, player, boneIndex, 0.02, 0.028, 0.001, 15.0, 175.0, 0.0, true, true, false, true, 1,
+        true)
     Wait(6000)
     DeleteObject(Canteen)
     ClearPedTasks(player, false, false)
@@ -185,16 +229,16 @@ end
 function WashPlayer()
     local player = PlayerPedId()
     PlayAnim('amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d', 'idle_l')
-    Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
-    Citizen.InvokeNative(0x523C79AEEFCC4A2A, player, 10, 'ALL') -- ClearPedDamageDecalByZone
-    Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
+    Citizen.InvokeNative(0x6585D955A68452A5, player)                -- ClearPedEnvDirt
+    Citizen.InvokeNative(0x523C79AEEFCC4A2A, player, 10, 'ALL')     -- ClearPedDamageDecalByZone
+    Citizen.InvokeNative(0x8FE22675A5A45817, player)                -- ClearPedBloodDamage
     Citizen.InvokeNative(0xE3144B932DFDFF65, player, 0.0, -1, 1, 1) -- SetPedDirtCleaned
 end
 
 -- Boosts from Drinking
 function PlayerStats()
     local player = PlayerPedId()
-    local health = Citizen.InvokeNative(0x36731AC041289BB1, player, 0) -- GetAttributeCoreValue
+    local health = Citizen.InvokeNative(0x36731AC041289BB1, player, 0)  -- GetAttributeCoreValue
     local stamina = Citizen.InvokeNative(0x36731AC041289BB1, player, 1) -- GetAttributeCoreValue
     local app = tonumber(Config.app)
     local appUpdate = {
@@ -322,6 +366,19 @@ function FillCanteen()
     PromptSetStandardMode(FillPrompt, 1)
     PromptSetGroup(FillPrompt, WaterGroup)
     PromptRegisterEnd(FillPrompt)
+end
+
+function FillBucket()
+    local str = _U('fillbucket')
+    FillBucketPrompt = PromptRegisterBegin()
+    PromptSetControlAction(FillBucketPrompt, Config.keys.fillbucket)
+    str = CreateVarString(10, 'LITERAL_STRING', str)
+    PromptSetText(FillBucketPrompt, str)
+    PromptSetEnabled(FillBucketPrompt, 1)
+    PromptSetVisible(FillBucketPrompt, 1)
+    PromptSetStandardMode(FillBucketPrompt, 1)
+    PromptSetGroup(FillBucketPrompt, PumpGroup)
+    PromptRegisterEnd(FillBucketPrompt)
 end
 
 function Wash()
