@@ -13,18 +13,28 @@ TriggerEvent('Outsider_Needs', function(cb)
 end)
 
 RegisterNetEvent('bcc-water:CheckEmpty', function()
-	local _source = source
+    local _source = source
     local canteen = VORPInv.getItem(_source, 'canteen')
     if canteen ~= nil then
         local meta = canteen['metadata']
         if next(meta) == nil then
             VORPInv.subItem(_source, 'canteen', 1, {})
-            VORPInv.addItem(_source, 'canteen', 1, {description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>', level = 5})
+            VORPInv.addItem(_source, 'canteen', 1,
+                {
+                    description = Config.lang.level ..
+                        ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>',
+                    level = 5
+                })
         else
             local level = meta.level
             if level == 1 then
                 VORPInv.subItem(_source, 'canteen', 1, meta)
-                VORPInv.addItem(_source, 'canteen', 1, {description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>', level = 5})
+                VORPInv.addItem(_source, 'canteen', 1,
+                    {
+                        description = Config.lang.level ..
+                            ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>',
+                        level = 5
+                    })
             else
                 VORPcore.NotifyRightTip(_source, _U('not_empty'), 5000)
                 TriggerClientEvent('bcc-water:Filling', _source)
@@ -57,43 +67,77 @@ RegisterNetEvent('bcc-water:UpdateCanteen', function(data)
         [2] = function()
             message = 1
             VORPInv.subItem(_source, 'canteen', 1, meta)
-            VORPInv.addItem(_source, 'canteen', 1, {description = Config.lang.level .. ' : ' .. '<span style=color:red;>' .. Config.lang.empty .. '</span>', level = 1})
+            VORPInv.addItem(_source, 'canteen', 1,
+                {
+                    description = Config.lang.level ..
+                        ' : ' .. '<span style=color:red;>' .. Config.lang.empty .. '</span>',
+                    level = 1
+                })
         end,
         [3] = function()
             message = 2
             VORPInv.subItem(_source, 'canteen', 1, meta)
-            VORPInv.addItem(_source, 'canteen', 1, {description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '25%' .. '</span>', level = 2})
+            VORPInv.addItem(_source, 'canteen', 1,
+                {
+                    description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '25%' .. '</span>',
+                    level = 2
+                })
         end,
         [4] = function()
             message = 3
             VORPInv.subItem(_source, 'canteen', 1, meta)
-            VORPInv.addItem(_source, 'canteen', 1, {description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '50%' .. '</span>', level = 3})
+            VORPInv.addItem(_source, 'canteen', 1,
+                {
+                    description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '50%' .. '</span>',
+                    level = 3
+                })
         end,
         [5] = function()
             message = 4
             VORPInv.subItem(_source, 'canteen', 1, meta)
-            VORPInv.addItem(_source, 'canteen', 1, {description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '75%' .. '</span>', level = 4})
+            VORPInv.addItem(_source, 'canteen', 1,
+                {
+                    description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '75%' .. '</span>',
+                    level = 4
+                })
         end
     }
-        if canteenUpdate[level] then
-            canteenUpdate[level]()
-        end
-        if not level then
-            VORPcore.NotifyRightTip(_source, _U('message_1'), 5000)
-            return
-        elseif level > 1 then
-            TriggerClientEvent('bcc-water:Drink', _source, message)
-        end
+    if canteenUpdate[level] then
+        canteenUpdate[level]()
+    end
+    if not level then
+        VORPcore.NotifyRightTip(_source, _U('message_1'), 5000)
+        return
+    elseif level > 1 then
+        TriggerClientEvent('bcc-water:Drink', _source, message)
+    end
+end)
+
+---------------------------------------- Watering Bucket Check -------------------------------------
+RegisterServerEvent('bcc-water:WateringBucketCheck', function()
+    local _source = source
+    local itemCount = VORPInv.getItemCount(_source, Config.EmptyWaterBucket)
+    if itemCount > 0 then
+        TriggerClientEvent('bcc-water:pumpbucket', _source)
+    else
+        VORPcore.NotifyRightTip(_source, _U('needbucket'))
+    end
+end)
+
+RegisterServerEvent('bcc-water:RefillWateringCan', function()
+    local _source = source
+    VORPcore.NotifyRightTip(_source, _U('filledbucket'))
+    VORPInv.subItem(_source, Config.EmptyWaterBucket, 1)
+    VORPInv.addItem(_source, Config.FullWaterBucket, 1)
 end)
 
 RegisterNetEvent('outsider_needs:Thirst', function(wild)
     local _source = source
     local data = {}
     if wild then
-        data = {water = Config.wildThirst}
+        data = { water = Config.wildThirst }
     else
-        data = {water = Config.thirst}
+        data = { water = Config.thirst }
     end
     Needs.addStats(_source, data)
 end)
-
