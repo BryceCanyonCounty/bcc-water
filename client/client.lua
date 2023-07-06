@@ -29,10 +29,9 @@ CreateThread(function()
     while true do
         Wait(0)
         local player = PlayerPedId()
-        local coords = GetEntityCoords(player, true, true)
+        local coords = GetEntityCoords(player)
         local sleep = true
-        local dead = IsEntityDead(player)
-        if not dead then
+        if not IsEntityDead(player) then
             -- Waterpumps
             local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_waterpump01x'), 0) -- DoesObjectOfTypeExistAtCoords
             local wellLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_wellpumpnbx01x'), 0) -- DoesObjectOfTypeExistAtCoords
@@ -44,10 +43,10 @@ CreateThread(function()
                             local waterpump = CreateVarString(10, 'LITERAL_STRING', _U('waterPump'))
                             PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
 
-                            if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpCanteenPrompt) then -- [F] UiPromptHasStandardModeCompleted
+                            if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpCanteenPrompt) then -- UiPromptHasStandardModeCompleted
                                 TriggerServerEvent('bcc-water:CheckCanteen', true)
                             end
-                            if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpBucketPrompt) then -- [L] UiPromptHasStandardModeCompleted
+                            if Citizen.InvokeNative(0xC92AC953F0A982AE, PumpBucketPrompt) then -- UiPromptHasStandardModeCompleted
                                 TriggerServerEvent('bcc-water:CheckBucket', true)
                             end
                         end
@@ -55,10 +54,10 @@ CreateThread(function()
                         if not Filling then
                             DrawText3Ds(coords.x, coords.y, coords.z, '~t6~F~q~ - '.. _U('fillCanteen') .. ' ' .. '~t6~L~q~ - ' .. _U('fillBucket'))
 
-                            if IsControlJustReleased(0, Config.keys.fillCanteen) then -- [F]
+                            if IsControlJustReleased(0, Config.keys.fillCanteen) then
                                 TriggerServerEvent('bcc-water:CheckCanteen', true)
                             end
-                            if IsControlJustReleased(0, Config.keys.fillBucket) then -- [L]
+                            if IsControlJustReleased(0, Config.keys.fillBucket) then
                                 TriggerServerEvent('bcc-water:CheckBucket', true)
                             end
                         end
@@ -68,30 +67,36 @@ CreateThread(function()
                 -- Wild Waters
                 local water = Citizen.InvokeNative(0x5BA7A68A346A5A91, coords.x, coords.y, coords.z) -- GetWaterMapZoneAtCoords
                 for k, _ in pairs(Config.locations) do
-                    if water == Config.locations[k].hash and IsPedOnFoot(player) then
-                        if IsEntityInWater(player) and Citizen.InvokeNative(0xD5FE956C70FF370B, player) then -- GetPedCrouchMovement
-                            if Citizen.InvokeNative(0xAC29253EEF8F0180, player) then -- IsPedStill
-                                sleep = false
-                                if not Filling then
-                                    local waterSource = CreateVarString(10, 'LITERAL_STRING', Config.locations[k].name)
-                                    PromptSetActiveGroupThisFrame(WaterGroup, waterSource)
+                    if water == Config.locations[k].hash and IsPedOnFoot(player) and IsEntityInWater(player) then
+                        if Config.crouch then
+                            if  Citizen.InvokeNative(0xD5FE956C70FF370B, player) then -- GetPedCrouchMovement
+                                goto continue
+                            else
+                                break
+                            end
+                        end
+                        ::continue::
+                        if Citizen.InvokeNative(0xAC29253EEF8F0180, player) then -- IsPedStill
+                            sleep = false
+                            if not Filling then
+                                local waterSource = CreateVarString(10, 'LITERAL_STRING', Config.locations[k].name)
+                                PromptSetActiveGroupThisFrame(WaterGroup, waterSource)
 
-                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, WildCanteenPrompt) then -- UiPromptHasStandardModeCompleted
-                                        TriggerServerEvent('bcc-water:CheckCanteen', false)
-                                        break
-                                    end
-                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, WildBucketPrompt) then -- UiPromptHasStandardModeCompleted
-                                        TriggerServerEvent('bcc-water:CheckBucket', false)
-                                        break
-                                    end
-                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, WashPrompt) then -- UiPromptHasStandardModeCompleted
-                                        WashPlayer()
-                                        break
-                                    end
-                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, DrinkPrompt) then -- UiPromptHasStandardModeCompleted
-                                        WildDrink()
-                                        break
-                                    end
+                                if Citizen.InvokeNative(0xC92AC953F0A982AE, WildCanteenPrompt) then -- UiPromptHasStandardModeCompleted
+                                    TriggerServerEvent('bcc-water:CheckCanteen', false)
+                                    break
+                                end
+                                if Citizen.InvokeNative(0xC92AC953F0A982AE, WildBucketPrompt) then -- UiPromptHasStandardModeCompleted
+                                    TriggerServerEvent('bcc-water:CheckBucket', false)
+                                    break
+                                end
+                                if Citizen.InvokeNative(0xC92AC953F0A982AE, WashPrompt) then -- UiPromptHasStandardModeCompleted
+                                    WashPlayer()
+                                    break
+                                end
+                                if Citizen.InvokeNative(0xC92AC953F0A982AE, DrinkPrompt) then -- UiPromptHasStandardModeCompleted
+                                    WildDrink()
+                                    break
                                 end
                             end
                         end
@@ -111,7 +116,7 @@ RegisterNetEvent('bcc-water:FillCanteen', function(pumpAnim)
     local player = PlayerPedId()
     Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     if not pumpAnim then
-        local coords = GetEntityCoords(player, true, true)
+        local coords = GetEntityCoords(player)
         local boneIndex = GetEntityBoneIndexByName(player, 'SKEL_R_HAND')
         local modelHash = joaat('p_cs_canteen_hercule')
         LoadModel(modelHash)
@@ -120,7 +125,16 @@ RegisterNetEvent('bcc-water:FillCanteen', function(pumpAnim)
         SetEntityAlpha(Canteen, 255, false)
         SetModelAsNoLongerNeeded(modelHash)
         AttachEntityToEntity(Canteen, player, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, true, true, false, true, 2, true)
-        PlayAnim('amb_work@world_human_crouch_inspect@male_c@idle_a', 'idle_a')
+
+        local dict = 'amb_work@world_human_crouch_inspect@male_c@idle_a'
+        LoadAnim(dict)
+        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
+        TaskSetCrouchMovement(player, true, 0, false)
+        Wait(1500)
+        TaskPlayAnim(player, dict, 'idle_a', 1.0, 1.0, -1, 3, 1.0, 0, 0, 0)
+        Wait(10000)
+        TaskSetCrouchMovement(player, false, 0, false)
+        Wait(1500)
         DeleteObject(Canteen)
     else
         -- Dataview snippet credit to Xakra and Ricx
@@ -144,7 +158,7 @@ RegisterNetEvent('bcc-water:FillCanteen', function(pumpAnim)
             PlayAnim('amb_work@prop_human_pump_water@female_b@idle_a', 'idle_a')
         end
     end
-    ClearPedTasksImmediately(player)
+    ClearPedTasks(player)
     Filling = false
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U('fullCanteen'), 5000)
@@ -158,7 +172,6 @@ RegisterNetEvent('bcc-water:FillBucket', function(pumpAnim)
     if not pumpAnim then
         TaskStartScenarioInPlace(player, joaat('WORLD_HUMAN_BUCKET_FILL'), -1, true, false, false, false)
         Wait(10000)
-        ClearPedTasks(player, true, true)
     else
         -- Dataview snippet credit to Xakra and Ricx
         local DataStruct = DataView.ArrayBuffer(256 * 4)
@@ -179,7 +192,7 @@ RegisterNetEvent('bcc-water:FillBucket', function(pumpAnim)
             PlayAnim('amb_work@prop_human_pump_water@female_b@idle_a', 'idle_a')
         end
     end
-    ClearPedTasksImmediately(player)
+    ClearPedTasks(player)
     Filling = false
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U('fullBucket'), 5000)
@@ -189,7 +202,7 @@ end)
 -- Drink from Canteen
 RegisterNetEvent('bcc-water:DrinkCanteen', function(level)
     local player = PlayerPedId()
-    local coords = GetEntityCoords(player, true, true)
+    local coords = GetEntityCoords(player)
     local boneIndex = GetEntityBoneIndexByName(player, 'SKEL_R_Finger12')
     local modelHash = joaat('p_cs_canteen_hercule')
     local dict = 'amb_rest_drunk@world_human_drinking@male_a@idle_a'
@@ -207,7 +220,7 @@ RegisterNetEvent('bcc-water:DrinkCanteen', function(level)
     AttachEntityToEntity(Canteen, player, boneIndex, 0.02, 0.028, 0.001, 15.0, 175.0, 0.0, true, true, false, true, 1, true)
     Wait(6000)
     DeleteObject(Canteen)
-    ClearPedTasks(player, false, false)
+    ClearPedTasks(player)
     PlayerStats(false)
 
     -- Canteen Level Messages
@@ -241,8 +254,8 @@ end
 -- Boosts from Drinking
 function PlayerStats(isWild)
     local player = PlayerPedId()
-    local health = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, player, 0)) -- GetAttributeCoreValue
-    local stamina = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, player, 1)) -- GetAttributeCoreValue
+    local health = Citizen.InvokeNative(0x36731AC041289BB1, player, 0) -- GetAttributeCoreValue
+    local stamina = Citizen.InvokeNative(0x36731AC041289BB1, player, 1) -- GetAttributeCoreValue
     local app = tonumber(Config.app)
     local appUpdate = {
         [1] = function()
@@ -278,56 +291,60 @@ function PlayerStats(isWild)
         appUpdate[app]()
         if isWild then
             -- Wild Health
-            local newWildHealth
-            if not Config.hurtHealth then
-                newWildHealth = health + Config.wildHealth
-            else
-                newWildHealth = health - Config.wildHealth
-            end
+            if Config.wildHealth > 0 then
+                local newWildHealth
+                if Config.gainHealth then
+                    newWildHealth = health + Config.wildHealth
+                else
+                    newWildHealth = health - Config.wildHealth
+                end
 
-            if newWildHealth > 100 then
-                newWildHealth = 100
+                if newWildHealth > 100 then
+                    newWildHealth = 100
+                end
+                if newWildHealth < 0 then
+                    newWildHealth = 0
+                end
+                Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, newWildHealth) -- SetAttributeCoreValue
             end
-            if newWildHealth < 0 then
-                newWildHealth = 0
-            end
-            Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, newWildHealth) -- SetAttributeCoreValue
 
             -- Wild Stamina
-            local newWildStamina
-            if not Config.hurtStamina then
-                newWildStamina = stamina + Config.wildStamina
-            else
-                newWildStamina = stamina - Config.wildStamina
-            end
+            if Config.wildStamina > 0 then
+                local newWildStamina
+                if Config.gainStamina then
+                    newWildStamina = stamina + Config.wildStamina
+                else
+                    newWildStamina = stamina - Config.wildStamina
+                end
 
-            if newWildStamina > 100 then
-                newWildStamina = 100
+                if newWildStamina > 100 then
+                    newWildStamina = 100
+                end
+                if newWildStamina < 0 then
+                    newWildStamina = 0
+                end
+                Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, newWildStamina) -- SetAttributeCoreValue
             end
-            if newWildStamina < 0 then
-                newWildStamina = 0
-            end
-            Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, newWildStamina) -- SetAttributeCoreValue
-            print('Health = ', health, ' ', newWildHealth)
-            print('Stamina = ', stamina, ' ', newWildStamina)
-            return
+            Citizen.InvokeNative(0x67C540AA08E4A6F5, 'Core_Fill_Up', 'Consumption_Sounds', true, 0) -- PlaySoundFrontend
         else
             -- Clean Health
-            local newHealth = health + Config.health
-            if newHealth > 100 then
-                newHealth = 100
+            if Config.health > 0 then
+                local newHealth = health + Config.health
+                if newHealth > 100 then
+                    newHealth = 100
+                end
+                Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, newHealth) -- SetAttributeCoreValue
             end
-            Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, newHealth) -- SetAttributeCoreValue
 
             -- Clean Stamina
-            local newStamina = stamina + Config.stamina
-            if newStamina > 100 then
-                newStamina = 100
+            if Config.stamina > 0 then
+                local newStamina = stamina + Config.stamina
+                if newStamina > 100 then
+                    newStamina = 100
+                end
+                Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, newStamina) -- SetAttributeCoreValue
             end
-            Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, newStamina) -- SetAttributeCoreValue
-            print('Health = ', health, ' ', newHealth)
-            print('Stamina = ', stamina, ' ', newStamina)
-            return
+            Citizen.InvokeNative(0x67C540AA08E4A6F5, 'Core_Fill_Up', 'Consumption_Sounds', true, 0) -- PlaySoundFrontend
         end
     else
         print('Check Config.app setting for correct metabolism value')
@@ -351,9 +368,9 @@ function PlayAnim(dict, anim)
     local player = PlayerPedId()
     LoadAnim(dict)
     Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-    TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
+    TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, 0, 0, 0)
     Wait(10000)
-    ClearPedTasks(player, false, false)
+    ClearPedTasks(player)
     Filling = false
 end
 

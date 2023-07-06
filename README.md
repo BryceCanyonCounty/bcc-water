@@ -31,8 +31,11 @@ Add the canteen and bucket items to a store or crafting station for players to b
 - Add images to: `...\vorp_inventory\html\img`
 - Add items to a store or crafting station for player use
 - Set your metabolism script in the `config.lua` file
-- Restart your server
+- Restart server
 
 #### Credits
 - green_canteen
-- MaffenTV_Steffen : German Translation
+- vorp_stores
+
+#### GitHub
+- https://github.com/BryceCanyonCounty/bcc-water
