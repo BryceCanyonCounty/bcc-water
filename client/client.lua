@@ -172,6 +172,9 @@ RegisterNetEvent('bcc-water:FillBucket', function(pumpAnim)
     if not pumpAnim then
         TaskStartScenarioInPlace(player, joaat('WORLD_HUMAN_BUCKET_FILL'), -1, true, false, false, false)
         Wait(10000)
+        ClearPedTasks(player, true, true)
+        Wait(4000)
+        ClearPedTasksImmediately(player)
     else
         -- Dataview snippet credit to Xakra and Ricx
         local DataStruct = DataView.ArrayBuffer(256 * 4)
@@ -185,6 +188,9 @@ RegisterNetEvent('bcc-water:FillBucket', function(pumpAnim)
                     Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
                     TaskUseScenarioPoint(player, scenario, '', -1.0, true, false, 0, false, -1.0, true)
                     Wait(15000)
+                    ClearPedTasks(player, true, true)
+                    Wait(5000)
+                    ClearPedTasksImmediately(player)
                     break
                 end
             end
@@ -192,7 +198,6 @@ RegisterNetEvent('bcc-water:FillBucket', function(pumpAnim)
             PlayAnim('amb_work@prop_human_pump_water@female_b@idle_a', 'idle_a')
         end
     end
-    ClearPedTasks(player)
     Filling = false
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U('fullBucket'), 5000)
