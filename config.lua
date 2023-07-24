@@ -9,7 +9,7 @@ Config.app = 1 -- Vorp Metabolism = 1 / Fred Metabolism Free = 2 / Outsider Need
 Config.keys = {
     fillCanteen = 0xB2F377E8, -- [F] Fill Canteen at Water Pumps and Wild Waters
     fillBucket  = 0x80F28E95, -- [L] Fill Bucket at Water Pumps
-    wash        = 0x4BC9DABB, -- [N] Wash Player in Wild Waters
+    wash        = 0xCEFD9220, -- [E] Wash Player in Wild Waters
     drink       = 0x760A9C6F  -- [G] Drink from Wild Waters
 }
 ---------------------------------------------------------------
