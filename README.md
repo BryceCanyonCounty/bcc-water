@@ -9,10 +9,10 @@ Add the canteen and bucket items to a store or crafting station for players to b
 - Drink 4 times from a full canteen
 - Quenches thirst when using supported metabolism scripts
 - Refill canteen and buckets at waterpumps, rivers and lakes
-- Directly drink from rivers and lakes to save the water in your canteen
+- Drink directly from rivers and lakes to save the water in your canteen
 - Separate health, stamina and thirst config values for drinking from canteen and wild waters
 - Players can wash in rivers and lakes
-- Players can take damagae from drinking wild water
+- Players can take damage from drinking wild water
 
 #### Dependencies
 - [vorp_core](https://github.com/VORPCORE/vorp-core-lua)
@@ -35,7 +35,6 @@ Add the canteen and bucket items to a store or crafting station for players to b
 
 #### Credits
 - green_canteen
-- vorp_stores
 
 #### GitHub
 - https://github.com/BryceCanyonCounty/bcc-water
