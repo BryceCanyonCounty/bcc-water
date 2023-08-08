@@ -16,11 +16,7 @@ TriggerEvent('getCore', function(core)
 end)
 
 CreateThread(function()
-    -- Start Prompts
-    FillCanteen()
-    FillBucket()
-    Wash()
-    Drink()
+    StartPrompts()
     --Start Water
     while true do
         Wait(0)
@@ -161,7 +157,7 @@ function CanteenFill(pumpAnim)
         Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
         TaskSetCrouchMovement(player, true, 0, false)
         Wait(1500)
-        TaskPlayAnim(player, dict, 'idle_a', 1.0, 1.0, -1, 3, 1.0, 0, 0, 0)
+        TaskPlayAnim(player, dict, 'idle_a', 1.0, 1.0, -1, 3, 1.0, false, false, false)
         Wait(10000)
         TaskSetCrouchMovement(player, false, 0, false)
         Wait(1500)
@@ -200,11 +196,11 @@ function BucketFill(pumpAnim)
     Filling = true
     local player = PlayerPedId()
     if not pumpAnim then
-        TaskStartScenarioInPlace(player, joaat('WORLD_HUMAN_BUCKET_FILL'), -1, true, false, false, false)
-        Wait(10000)
+        Citizen.InvokeNative(0x524B54361229154F, player, joaat('WORLD_HUMAN_BUCKET_FILL'), -1, true, 0, -1, false) -- TaskStartScenarioInPlaceHash
+        Wait(8000)
         ClearPedTasks(player, true, true)
         Wait(4000)
-        ClearPedTasksImmediately(player)
+        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
     else
         -- Dataview snippet credit to Xakra and Ricx
         local DataStruct = DataView.ArrayBuffer(256 * 4)
@@ -220,7 +216,7 @@ function BucketFill(pumpAnim)
                     Wait(15000)
                     ClearPedTasks(player, true, true)
                     Wait(5000)
-                    ClearPedTasksImmediately(player)
+                    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
                     break
                 end
             end
@@ -411,7 +407,7 @@ function PlayAnim(dict, anim)
     local player = PlayerPedId()
     LoadAnim(dict)
     Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-    TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, 0, 0, 0)
+    TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
     Wait(10000)
     ClearPedTasks(player)
     Filling = false
@@ -432,49 +428,43 @@ function LoadModel(model)
 end
 
 -- Menu Prompts
-function FillCanteen()
-    local str = CreateVarString(10, 'LITERAL_STRING', _U('fillCanteen'))
+function StartPrompts()
+    local canteenStr = CreateVarString(10, 'LITERAL_STRING', _U('fillCanteen'))
     FillCanteenPrompt = PromptRegisterBegin()
     PromptSetControlAction(FillCanteenPrompt, Config.keys.fillCanteen)
-    PromptSetText(FillCanteenPrompt, str)
+    PromptSetText(FillCanteenPrompt, canteenStr)
     PromptSetEnabled(FillCanteenPrompt, 1)
     PromptSetVisible(FillCanteenPrompt, 1)
     PromptSetStandardMode(FillCanteenPrompt, 1)
     PromptSetGroup(FillCanteenPrompt, WaterGroup)
     PromptSetGroup(FillCanteenPrompt, PumpGroup)
     PromptRegisterEnd(FillCanteenPrompt)
-end
 
-function FillBucket()
-    local str = CreateVarString(10, 'LITERAL_STRING', _U('fillBucket'))
+    local bucketStr = CreateVarString(10, 'LITERAL_STRING', _U('fillBucket'))
     FillBucketPrompt = PromptRegisterBegin()
     PromptSetControlAction(FillBucketPrompt, Config.keys.fillBucket)
-    PromptSetText(FillBucketPrompt, str)
+    PromptSetText(FillBucketPrompt, bucketStr)
     PromptSetEnabled(FillBucketPrompt, 1)
     PromptSetVisible(FillBucketPrompt, 1)
     PromptSetStandardMode(FillBucketPrompt, 1)
     PromptSetGroup(FillBucketPrompt, WaterGroup)
     PromptSetGroup(FillBucketPrompt, PumpGroup)
     PromptRegisterEnd(FillBucketPrompt)
-end
 
-function Wash()
-    local str = CreateVarString(10, 'LITERAL_STRING', _U('wash'))
+    local washStr = CreateVarString(10, 'LITERAL_STRING', _U('wash'))
     WashPrompt = PromptRegisterBegin()
     PromptSetControlAction(WashPrompt, Config.keys.wash)
-    PromptSetText(WashPrompt, str)
+    PromptSetText(WashPrompt, washStr)
     PromptSetEnabled(WashPrompt, 1)
     PromptSetVisible(WashPrompt, 1)
     PromptSetStandardMode(WashPrompt, 1)
     PromptSetGroup(WashPrompt, WaterGroup)
     PromptRegisterEnd(WashPrompt)
-end
 
-function Drink()
-    local str = CreateVarString(10, 'LITERAL_STRING', _U('drink'))
+    local drinkStr = CreateVarString(10, 'LITERAL_STRING', _U('drink'))
     DrinkPrompt = PromptRegisterBegin()
     PromptSetControlAction(DrinkPrompt, Config.keys.drink)
-    PromptSetText(DrinkPrompt, str)
+    PromptSetText(DrinkPrompt, drinkStr)
     PromptSetEnabled(DrinkPrompt, 1)
     PromptSetVisible(DrinkPrompt, 1)
     PromptSetStandardMode(DrinkPrompt, 1)
@@ -488,7 +478,7 @@ function DrawText3Ds(x, y, z, text)
     SetTextFontForCurrentCommand(9)
     SetTextColor(255, 255, 255, 215)
     local str = CreateVarString(10, 'LITERAL_STRING', text, Citizen.ResultAsLong())
-    SetTextCentre(1)
+    SetTextCentre(true)
     DisplayText(str, _x, _y)
 end
 
