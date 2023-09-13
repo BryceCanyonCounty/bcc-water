@@ -23,7 +23,7 @@ VORPcore.addRpcCallback('GetCanteenLevel', function(source, cb)
             })
         else
             local level = meta.level
-            if level == 1 then
+            if level < 5 then
                 VORPInv.subItem(_source, itemCanteen, 1, meta)
                 VORPInv.addItem(_source, itemCanteen, 1, {
                     description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>', level = 5
@@ -84,14 +84,14 @@ VORPcore.addRpcCallback('UpdateCanteen', function(source, cb)
         end
     }
     if canteenUpdate[level] then
-        canteenUpdate[level]()
-    end
-    if not level then
-        VORPcore.NotifyRightTip(_source, _U('message_1'), 4000)
-        cb(false)
-    elseif level > 1 then
-        cb(level)
-    end
+	canteenUpdate[level]()
+        end
+        if not level then
+            VORPcore.NotifyRightTip(_source, _U('message_1'), 4000)
+            cb(false)
+        elseif level > 1 then
+            cb(level)
+        end
 end)
 
 -- Check if Player has an Empty Bucket and Update
