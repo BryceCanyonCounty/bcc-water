@@ -1,4 +1,9 @@
 local VORPcore = {}
+TriggerEvent('getCore', function(core)
+    VORPcore = core
+end)
+
+local ClientRPC = exports.vorp_core:ClientRpcCall()
 -- Prompts
 local FillCanteenPrompt
 local FillBucketPrompt
@@ -10,119 +15,167 @@ local WaterGroup = GetRandomIntInRange(0, 0xffffff)
 local Canteen
 local Filling = false
 local UseCanteen = true
+local PromptsStarted = false
 
-TriggerEvent('getCore', function(core)
-    VORPcore = core
-end)
-
+-- Waterpumps
 CreateThread(function()
-    StartPrompts()
-    --Start Water
-    while true do
-        Wait(0)
-        local player = PlayerPedId()
-        local coords = GetEntityCoords(player)
-        local sleep = true
-        if not IsEntityDead(player) then
-            -- Waterpumps
-            local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_waterpump01x'), 0) -- DoesObjectOfTypeExistAtCoords
-            local wellLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_wellpumpnbx01x'), 0) -- DoesObjectOfTypeExistAtCoords
-            if pumpLoc or wellLoc then
-                if IsPedOnFoot(player) then
-                    sleep = false
-                    if Config.usePrompt then
-                        if not Filling then
-                            local waterpump = CreateVarString(10, 'LITERAL_STRING', _U('waterPump'))
-                            PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
+    if Config.pumpsEnabled then
+        StartPrompts()
+        local pumpCanteen  = Config.pumpCanteen
+        local pumpBucket   = Config.pumpBucket
+        while true do
+            Wait(0)
+            local playerPed = PlayerPedId()
+            local coords = GetEntityCoords(playerPed)
+            local sleep = true
+            if not IsEntityDead(playerPed) then
+                local pumpLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_waterpump01x'), 0) -- DoesObjectOfTypeExistAtCoords
+                local wellLoc = Citizen.InvokeNative(0xBFA48E2FF417213F, coords.x, coords.y, coords.z, 0.75, joaat('p_wellpumpnbx01x'), 0) -- DoesObjectOfTypeExistAtCoords
+                if pumpLoc or wellLoc then
+                    if IsPedOnFoot(playerPed) then
+                        sleep = false
+                        if Config.usePrompt then
+                            if not Filling then
+                                local waterpump = CreateVarString(10, 'LITERAL_STRING', _U('waterPump'))
+                                PromptSetActiveGroupThisFrame(PumpGroup, waterpump)
+                                if pumpCanteen then
+                                    PromptSetVisible(FillCanteenPrompt, true)
+                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, FillCanteenPrompt) then -- UiPromptHasStandardModeCompleted
+                                        local canFillCanteen = ClientRPC.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
+                                        if canFillCanteen then
+                                            CanteenFill(true)
+                                        else
+                                            Filling = false
+                                        end
+                                    end
+                                else
+                                    PromptSetVisible(FillCanteenPrompt, false)
+                                end
+                                if pumpBucket then
+                                    PromptSetVisible(FillBucketPrompt, true)
+                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, FillBucketPrompt) then -- UiPromptHasStandardModeCompleted
+                                        local canFillBucket = ClientRPC.Callback.TriggerAwait('bcc-water:GetBucket')
+                                        if canFillBucket then
+                                            BucketFill(true)
+                                        else
+                                            Filling = false
+                                        end
+                                    end
+                                else
+                                    PromptSetVisible(FillBucketPrompt, false)
+                                end
+                            end
+                        else
+                            if not Filling then
+                                if pumpCanteen then
+                                    DrawText3Ds(coords.x, coords.y, coords.z + 0.1, '~t6~R~q~ - '.. _U('fillCanteen'))
 
-                            if Citizen.InvokeNative(0xC92AC953F0A982AE, FillCanteenPrompt) then -- UiPromptHasStandardModeCompleted
-                                VORPcore.RpcCall('GetCanteenLevel', function(canFillCanteen)
-                                    if canFillCanteen then
-                                        CanteenFill(true)
-                                    else
-                                        Filling = false
+                                    if IsControlJustReleased(0, Config.keys.fillCanteen) then
+                                        local canFillCanteen = ClientRPC.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
+                                        if canFillCanteen then
+                                            CanteenFill(true)
+                                        else
+                                            Filling = false
+                                        end
                                     end
-                                end)
-                            end
-                            if Citizen.InvokeNative(0xC92AC953F0A982AE, FillBucketPrompt) then -- UiPromptHasStandardModeCompleted
-                                VORPcore.RpcCall('GetBucketLevel', function(canFillBucket)
-                                    if canFillBucket then
-                                        BucketFill(true)
-                                    else
-                                        Filling = false
-                                    end
-                                end)
-                            end
-                        end
-                    else
-                        if not Filling then
-                            DrawText3Ds(coords.x, coords.y, coords.z, '~t6~F~q~ - '.. _U('fillCanteen') .. ' ' .. '~t6~L~q~ - ' .. _U('fillBucket'))
+                                end
+                                if pumpBucket then
+                                    DrawText3Ds(coords.x, coords.y, coords.z, '~t6~E~q~ - ' .. _U('fillBucket'))
 
-                            if IsControlJustReleased(0, Config.keys.fillCanteen) then
-                                VORPcore.RpcCall('GetCanteenLevel', function(canFillCanteen)
-                                    if canFillCanteen then
-                                        CanteenFill(true)
-                                    else
-                                        Filling = false
+                                    if IsControlJustReleased(0, Config.keys.fillBucket) then
+                                        local canFillBucket = ClientRPC.Callback.TriggerAwait('bcc-water:GetBucket')
+                                        if canFillBucket then
+                                            BucketFill(true)
+                                        else
+                                            Filling = false
+                                        end
                                     end
-                                end)
-                            end
-                            if IsControlJustReleased(0, Config.keys.fillBucket) then
-                                VORPcore.RpcCall('GetBucketLevel', function(canFillBucket)
-                                    if canFillBucket then
-                                        BucketFill(true)
-                                    else
-                                        Filling = false
-                                    end
-                                end)
+                                end
                             end
                         end
                     end
                 end
-            else
-                -- Wild Waters
+            end
+            if sleep then
+                Wait(1000)
+            end
+        end
+    end
+end)
+
+-- Wild Waters
+CreateThread(function()
+    if Config.wildEnabled then
+        StartPrompts()
+        local wildCanteen  = Config.wildCanteen
+        local wildBucket   = Config.wildBucket
+        local wildWash     = Config.wildWash
+        local wildDrink    = Config.wildDrink
+        while true do
+            Wait(0)
+            local playerPed = PlayerPedId()
+            local coords = GetEntityCoords(playerPed)
+            local sleep = true
+            if not IsEntityDead(playerPed) then
                 local water = Citizen.InvokeNative(0x5BA7A68A346A5A91, coords.x, coords.y, coords.z) -- GetWaterMapZoneAtCoords
                 for k, _ in pairs(Config.locations) do
-                    if water == Config.locations[k].hash and IsPedOnFoot(player) and IsEntityInWater(player) then
+                    if water == Config.locations[k].hash and IsPedOnFoot(playerPed) and IsEntityInWater(playerPed) then
                         if Config.crouch then
-                            if  Citizen.InvokeNative(0xD5FE956C70FF370B, player) then -- GetPedCrouchMovement
+                            if  Citizen.InvokeNative(0xD5FE956C70FF370B, playerPed) then -- GetPedCrouchMovement
                             else
                                 break
                             end
                         end
-                        if Citizen.InvokeNative(0xAC29253EEF8F0180, player) then -- IsPedStill
+                        if Citizen.InvokeNative(0xAC29253EEF8F0180, playerPed) then -- IsPedStill
                             sleep = false
                             if not Filling then
                                 local waterSource = CreateVarString(10, 'LITERAL_STRING', Config.locations[k].name)
                                 PromptSetActiveGroupThisFrame(WaterGroup, waterSource)
-
-                                if Citizen.InvokeNative(0xC92AC953F0A982AE, FillCanteenPrompt) then -- UiPromptHasStandardModeCompleted
-                                    VORPcore.RpcCall('GetCanteenLevel', function(canFillCanteen)
+                                if wildCanteen then
+                                    PromptSetVisible(FillCanteenPrompt, true)
+                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, FillCanteenPrompt) then -- UiPromptHasStandardModeCompleted
+                                        local canFillCanteen = ClientRPC.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
                                         if canFillCanteen then
                                             CanteenFill(false)
                                         else
                                             Filling = false
                                         end
-                                    end)
-                                    break
+                                        break
+                                    end
+                                else
+                                    PromptSetVisible(FillCanteenPrompt, false)
                                 end
-                                if Citizen.InvokeNative(0xC92AC953F0A982AE, FillBucketPrompt) then -- UiPromptHasStandardModeCompleted
-                                    VORPcore.RpcCall('GetBucketLevel', function(canFillBucket)
+                                if wildBucket then
+                                    PromptSetVisible(FillBucketPrompt, true)
+                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, FillBucketPrompt) then -- UiPromptHasStandardModeCompleted
+                                        local canFillBucket = ClientRPC.Callback.TriggerAwait('bcc-water:GetBucket')
                                         if canFillBucket then
                                             BucketFill(false)
                                         else
                                             Filling = false
                                         end
-                                    end)
-                                    break
+                                        break
+                                    end
+                                else
+                                    PromptSetVisible(FillBucketPrompt, false)
                                 end
-                                if Citizen.InvokeNative(0xC92AC953F0A982AE, WashPrompt) then -- UiPromptHasStandardModeCompleted
-                                    WashPlayer()
-                                    break
+                                if wildWash then
+                                    PromptSetVisible(WashPrompt, true)
+                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, WashPrompt) then -- UiPromptHasStandardModeCompleted
+                                        WashPlayer()
+                                        break
+                                    end
+                                else
+                                    PromptSetVisible(WashPrompt, false)
                                 end
-                                if Citizen.InvokeNative(0xC92AC953F0A982AE, DrinkPrompt) then -- UiPromptHasStandardModeCompleted
-                                    WildDrink()
-                                    break
+                                if wildDrink then
+                                    PromptSetVisible(DrinkPrompt, true)
+                                    if Citizen.InvokeNative(0xC92AC953F0A982AE, DrinkPrompt) then -- UiPromptHasStandardModeCompleted
+                                        WildDrink()
+                                        break
+                                    end
+                                else
+                                    PromptSetVisible(DrinkPrompt, false)
                                 end
                             end
                         end
@@ -139,41 +192,41 @@ end)
 -- Fill Canteen Animations
 function CanteenFill(pumpAnim)
     Filling = true
-    local player = PlayerPedId()
-    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
+    local playerPed = PlayerPedId()
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, playerPed, 2, true) -- HidePedWeapons
     if not pumpAnim then
-        local coords = GetEntityCoords(player)
-        local boneIndex = GetEntityBoneIndexByName(player, 'SKEL_R_HAND')
+        local coords = GetEntityCoords(playerPed)
+        local boneIndex = GetEntityBoneIndexByName(playerPed, 'SKEL_R_HAND')
         local modelHash = joaat('p_cs_canteen_hercule')
         LoadModel(modelHash)
         Canteen = CreateObject(modelHash, coords.x, coords.y, coords.z, true, true, false, false, true)
         SetEntityVisible(Canteen, true)
         SetEntityAlpha(Canteen, 255, false)
         SetModelAsNoLongerNeeded(modelHash)
-        AttachEntityToEntity(Canteen, player, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, true, true, false, true, 2, true)
+        AttachEntityToEntity(Canteen, playerPed, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, true, true, false, true, 2, true)
 
         local dict = 'amb_work@world_human_crouch_inspect@male_c@idle_a'
         LoadAnim(dict)
-        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-        TaskSetCrouchMovement(player, true, 0, false)
+        Citizen.InvokeNative(0xFCCC886EDE3C63EC, playerPed, 2, true) -- HidePedWeapons
+        TaskSetCrouchMovement(playerPed, true, 0, false)
         Wait(1500)
-        TaskPlayAnim(player, dict, 'idle_a', 1.0, 1.0, -1, 3, 1.0, false, false, false)
+        TaskPlayAnim(playerPed, dict, 'idle_a', 1.0, 1.0, -1, 3, 1.0, false, false, false)
         Wait(10000)
-        TaskSetCrouchMovement(player, false, 0, false)
+        TaskSetCrouchMovement(playerPed, false, 0, false)
         Wait(1500)
         DeleteObject(Canteen)
     else
         -- Dataview snippet credit to Xakra and Ricx
         local DataStruct = DataView.ArrayBuffer(256 * 4)
-        local hasData = Citizen.InvokeNative(0x345EC3B7EBDE1CB5, GetEntityCoords(player), 2.0, DataStruct:Buffer(), 10) -- GetScenarioPointsInArea
+        local hasData = Citizen.InvokeNative(0x345EC3B7EBDE1CB5, GetEntityCoords(playerPed), 2.0, DataStruct:Buffer(), 10) -- GetScenarioPointsInArea
         if hasData then
             for i = 1, 1 do
                 local scenario = DataStruct:GetInt32(8 * i)
                 local hash = Citizen.InvokeNative(0xA92450B5AE687AAF, scenario) -- GetScenarioPointType
                 if hash == joaat('PROP_HUMAN_PUMP_WATER') then
-                    ClearPedTasksImmediately(player)
-                    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-                    TaskUseScenarioPoint(player, scenario, '', -1.0, true, false, 0, false, -1.0, true)
+                    ClearPedTasksImmediately(playerPed)
+                    Citizen.InvokeNative(0xFCCC886EDE3C63EC, playerPed, 2, true) -- HidePedWeapons
+                    TaskUseScenarioPoint(playerPed, scenario, '', -1.0, true, false, 0, false, -1.0, true)
                     Wait(15000)
                     break
                 else
@@ -184,7 +237,7 @@ function CanteenFill(pumpAnim)
             PlayAnim('amb_work@prop_human_pump_water@female_b@idle_a', 'idle_a')
         end
     end
-    ClearPedTasks(player)
+    ClearPedTasks(playerPed)
     Filling = false
     if Config.showMessages then
         VORPcore.NotifyRightTip(_U('fullCanteen'), 5000)
@@ -194,29 +247,29 @@ end
 -- Fill Bucket Animations
 function BucketFill(pumpAnim)
     Filling = true
-    local player = PlayerPedId()
+    local playerPed = PlayerPedId()
     if not pumpAnim then
-        Citizen.InvokeNative(0x524B54361229154F, player, joaat('WORLD_HUMAN_BUCKET_FILL'), -1, true, 0, -1, false) -- TaskStartScenarioInPlaceHash
+        Citizen.InvokeNative(0x524B54361229154F, playerPed, joaat('WORLD_HUMAN_BUCKET_FILL'), -1, true, 0, -1, false) -- TaskStartScenarioInPlaceHash
         Wait(8000)
-        ClearPedTasks(player, true, true)
+        ClearPedTasks(playerPed, true, true)
         Wait(4000)
-        Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
+        Citizen.InvokeNative(0xFCCC886EDE3C63EC, playerPed, 2, true) -- HidePedWeapons
     else
         -- Dataview snippet credit to Xakra and Ricx
         local DataStruct = DataView.ArrayBuffer(256 * 4)
-        local hasData = Citizen.InvokeNative(0x345EC3B7EBDE1CB5, GetEntityCoords(player), 2.0, DataStruct:Buffer(), 10) -- GetScenarioPointsInArea
+        local hasData = Citizen.InvokeNative(0x345EC3B7EBDE1CB5, GetEntityCoords(playerPed), 2.0, DataStruct:Buffer(), 10) -- GetScenarioPointsInArea
         if hasData then
             for i = 1, 1 do
                 local scenario = DataStruct:GetInt32(8 * i)
                 local hash = Citizen.InvokeNative(0xA92450B5AE687AAF, scenario) -- GetScenarioPointType
                 if hash == joaat('PROP_HUMAN_PUMP_WATER') or hash == joaat('PROP_HUMAN_PUMP_WATER_BUCKET') then
-                    ClearPedTasksImmediately(player)
-                    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-                    TaskUseScenarioPoint(player, scenario, '', -1.0, true, false, 0, false, -1.0, true)
+                    ClearPedTasksImmediately(playerPed)
+                    Citizen.InvokeNative(0xFCCC886EDE3C63EC, playerPed, 2, true) -- HidePedWeapons
+                    TaskUseScenarioPoint(playerPed, scenario, '', -1.0, true, false, 0, false, -1.0, true)
                     Wait(15000)
-                    ClearPedTasks(player, true, true)
+                    ClearPedTasks(playerPed, true, true)
                     Wait(5000)
-                    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
+                    Citizen.InvokeNative(0xFCCC886EDE3C63EC, playerPed, 2, true) -- HidePedWeapons
                     break
                 end
             end
@@ -232,9 +285,9 @@ end
 
 -- Drink from Canteen
 function DrinkCanteen(level)
-    local player = PlayerPedId()
-    local coords = GetEntityCoords(player)
-    local boneIndex = GetEntityBoneIndexByName(player, 'SKEL_R_Finger12')
+    local playerPed = PlayerPedId()
+    local coords = GetEntityCoords(playerPed)
+    local boneIndex = GetEntityBoneIndexByName(playerPed, 'SKEL_R_Finger12')
     local modelHash = joaat('p_cs_canteen_hercule')
     local dict = 'amb_rest_drunk@world_human_drinking@male_a@idle_a'
     local anim = 'idle_a'
@@ -247,11 +300,11 @@ function DrinkCanteen(level)
     SetEntityVisible(Canteen, true)
     SetEntityAlpha(Canteen, 255, false)
     SetModelAsNoLongerNeeded(modelHash)
-    TaskPlayAnim(player, dict, anim, 1.0, 1.0, 5000, 31, 0.0, false, false, false)
-    AttachEntityToEntity(Canteen, player, boneIndex, 0.02, 0.028, 0.001, 15.0, 175.0, 0.0, true, true, false, true, 1, true)
+    TaskPlayAnim(playerPed, dict, anim, 1.0, 1.0, 5000, 31, 0.0, false, false, false)
+    AttachEntityToEntity(Canteen, playerPed, boneIndex, 0.02, 0.028, 0.001, 15.0, 175.0, 0.0, true, true, false, true, 1, true)
     Wait(6000)
     DeleteObject(Canteen)
-    ClearPedTasks(player)
+    ClearPedTasks(playerPed)
     PlayerStats(false)
 
     -- Canteen Level Messages
@@ -274,19 +327,19 @@ end
 
 -- Wash Player in Wild Waters
 function WashPlayer()
-    local player = PlayerPedId()
+    local playerPed = PlayerPedId()
     PlayAnim('amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d', 'idle_l')
-    Citizen.InvokeNative(0x6585D955A68452A5, player) -- ClearPedEnvDirt
-    Citizen.InvokeNative(0x523C79AEEFCC4A2A, player, 10, 'ALL') -- ClearPedDamageDecalByZone
-    Citizen.InvokeNative(0x8FE22675A5A45817, player) -- ClearPedBloodDamage
-    Citizen.InvokeNative(0xE3144B932DFDFF65, player, 0.0, -1, 1, 1) -- SetPedDirtCleaned
+    Citizen.InvokeNative(0x6585D955A68452A5, playerPed) -- ClearPedEnvDirt
+    Citizen.InvokeNative(0x523C79AEEFCC4A2A, playerPed, 10, 'ALL') -- ClearPedDamageDecalByZone
+    Citizen.InvokeNative(0x8FE22675A5A45817, playerPed) -- ClearPedBloodDamage
+    Citizen.InvokeNative(0xE3144B932DFDFF65, playerPed, 0.0, -1, 1, 1) -- SetPedDirtCleaned
 end
 
 -- Boosts from Drinking
 function PlayerStats(isWild)
-    local player = PlayerPedId()
-    local health = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, player, 0)) -- GetAttributeCoreValue
-    local stamina = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, player, 1)) -- GetAttributeCoreValue
+    local playerPed = PlayerPedId()
+    local health = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 0)) -- GetAttributeCoreValue
+    local stamina = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 1)) -- GetAttributeCoreValue
     local app = tonumber(Config.app)
     local appUpdate = {
         [1] = function()
@@ -316,6 +369,13 @@ function PlayerStats(isWild)
             else
                 TriggerEvent('fred_meta:consume', 0, Config.thirst, 0, 0.0, 0.0, 0, 0.0, 0.0)
             end
+        end,
+        [5] = function()
+            if isWild then
+                exports.fred_metabolism:consume('thirst' , Config.wildThirst)
+            else
+                exports.fred_metabolism:consume('thirst' , Config.thirst)
+            end
         end
     }
     if appUpdate[app] then
@@ -342,7 +402,7 @@ function PlayerStats(isWild)
                 if newWildHealth < 0 then
                     newWildHealth = 0
                 end
-                Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, newWildHealth) -- SetAttributeCoreValue
+                Citizen.InvokeNative(0xC6258F41D86676E0, playerPed, 0, newWildHealth) -- SetAttributeCoreValue
             end
 
             -- Wild Stamina
@@ -360,7 +420,7 @@ function PlayerStats(isWild)
                 if newWildStamina < 0 then
                     newWildStamina = 0
                 end
-                Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, newWildStamina) -- SetAttributeCoreValue
+                Citizen.InvokeNative(0xC6258F41D86676E0, playerPed, 1, newWildStamina) -- SetAttributeCoreValue
             end
             Citizen.InvokeNative(0x67C540AA08E4A6F5, 'Core_Fill_Up', 'Consumption_Sounds', true, 0) -- PlaySoundFrontend
         else
@@ -370,7 +430,7 @@ function PlayerStats(isWild)
                 if newHealth > 100 then
                     newHealth = 100
                 end
-                Citizen.InvokeNative(0xC6258F41D86676E0, player, 0, newHealth) -- SetAttributeCoreValue
+                Citizen.InvokeNative(0xC6258F41D86676E0, playerPed, 0, newHealth) -- SetAttributeCoreValue
             end
 
             -- Clean Stamina
@@ -379,7 +439,7 @@ function PlayerStats(isWild)
                 if newStamina > 100 then
                     newStamina = 100
                 end
-                Citizen.InvokeNative(0xC6258F41D86676E0, player, 1, newStamina) -- SetAttributeCoreValue
+                Citizen.InvokeNative(0xC6258F41D86676E0, playerPed, 1, newStamina) -- SetAttributeCoreValue
             end
             Citizen.InvokeNative(0x67C540AA08E4A6F5, 'Core_Fill_Up', 'Consumption_Sounds', true, 0) -- PlaySoundFrontend
         end
@@ -390,13 +450,12 @@ end
 
 RegisterNetEvent('bcc-water:UseCanteen', function()
     if UseCanteen then
-        VORPcore.RpcCall('UpdateCanteen', function(canDrink)
-            if canDrink then
-                DrinkCanteen(canDrink)
-            else
-                return
-            end
-        end)
+        local canDrink = ClientRPC.Callback.TriggerAwait('bcc-water:UpdateCanteen')
+        if canDrink then
+            DrinkCanteen(canDrink)
+        else
+            return
+        end
         UseCanteen = false
         Wait(8000)
         UseCanteen = true
@@ -404,12 +463,12 @@ RegisterNetEvent('bcc-water:UseCanteen', function()
 end)
 
 function PlayAnim(dict, anim)
-    local player = PlayerPedId()
+    local playerPed = PlayerPedId()
     LoadAnim(dict)
-    Citizen.InvokeNative(0xFCCC886EDE3C63EC, player, 2, true) -- HidePedWeapons
-    TaskPlayAnim(player, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
+    Citizen.InvokeNative(0xFCCC886EDE3C63EC, playerPed, 2, true) -- HidePedWeapons
+    TaskPlayAnim(playerPed, dict, anim, 1.0, 1.0, -1, 17, 1.0, false, false, false)
     Wait(10000)
-    ClearPedTasks(player)
+    ClearPedTasks(playerPed)
     Filling = false
 end
 
@@ -429,47 +488,47 @@ end
 
 -- Menu Prompts
 function StartPrompts()
-    local canteenStr = CreateVarString(10, 'LITERAL_STRING', _U('fillCanteen'))
-    FillCanteenPrompt = PromptRegisterBegin()
-    PromptSetControlAction(FillCanteenPrompt, Config.keys.fillCanteen)
-    PromptSetText(FillCanteenPrompt, canteenStr)
-    PromptSetEnabled(FillCanteenPrompt, 1)
-    PromptSetVisible(FillCanteenPrompt, 1)
-    PromptSetStandardMode(FillCanteenPrompt, 1)
-    PromptSetGroup(FillCanteenPrompt, WaterGroup)
-    PromptSetGroup(FillCanteenPrompt, PumpGroup)
-    PromptRegisterEnd(FillCanteenPrompt)
+    if not PromptsStarted then
+        local canteenStr = CreateVarString(10, 'LITERAL_STRING', _U('fillCanteen'))
+        FillCanteenPrompt = PromptRegisterBegin()
+        PromptSetControlAction(FillCanteenPrompt, Config.keys.fillCanteen)
+        PromptSetText(FillCanteenPrompt, canteenStr)
+        PromptSetEnabled(FillCanteenPrompt, true)
+        PromptSetStandardMode(FillCanteenPrompt, true)
+        PromptSetGroup(FillCanteenPrompt, WaterGroup)
+        PromptSetGroup(FillCanteenPrompt, PumpGroup)
+        PromptRegisterEnd(FillCanteenPrompt)
 
-    local bucketStr = CreateVarString(10, 'LITERAL_STRING', _U('fillBucket'))
-    FillBucketPrompt = PromptRegisterBegin()
-    PromptSetControlAction(FillBucketPrompt, Config.keys.fillBucket)
-    PromptSetText(FillBucketPrompt, bucketStr)
-    PromptSetEnabled(FillBucketPrompt, 1)
-    PromptSetVisible(FillBucketPrompt, 1)
-    PromptSetStandardMode(FillBucketPrompt, 1)
-    PromptSetGroup(FillBucketPrompt, WaterGroup)
-    PromptSetGroup(FillBucketPrompt, PumpGroup)
-    PromptRegisterEnd(FillBucketPrompt)
+        local bucketStr = CreateVarString(10, 'LITERAL_STRING', _U('fillBucket'))
+        FillBucketPrompt = PromptRegisterBegin()
+        PromptSetControlAction(FillBucketPrompt, Config.keys.fillBucket)
+        PromptSetText(FillBucketPrompt, bucketStr)
+        PromptSetEnabled(FillBucketPrompt, true)
+        PromptSetStandardMode(FillBucketPrompt, true)
+        PromptSetGroup(FillBucketPrompt, WaterGroup)
+        PromptSetGroup(FillBucketPrompt, PumpGroup)
+        PromptRegisterEnd(FillBucketPrompt)
 
-    local washStr = CreateVarString(10, 'LITERAL_STRING', _U('wash'))
-    WashPrompt = PromptRegisterBegin()
-    PromptSetControlAction(WashPrompt, Config.keys.wash)
-    PromptSetText(WashPrompt, washStr)
-    PromptSetEnabled(WashPrompt, 1)
-    PromptSetVisible(WashPrompt, 1)
-    PromptSetStandardMode(WashPrompt, 1)
-    PromptSetGroup(WashPrompt, WaterGroup)
-    PromptRegisterEnd(WashPrompt)
+        local washStr = CreateVarString(10, 'LITERAL_STRING', _U('wash'))
+        WashPrompt = PromptRegisterBegin()
+        PromptSetControlAction(WashPrompt, Config.keys.wash)
+        PromptSetText(WashPrompt, washStr)
+        PromptSetEnabled(WashPrompt, true)
+        PromptSetStandardMode(WashPrompt, true)
+        PromptSetGroup(WashPrompt, WaterGroup)
+        PromptRegisterEnd(WashPrompt)
 
-    local drinkStr = CreateVarString(10, 'LITERAL_STRING', _U('drink'))
-    DrinkPrompt = PromptRegisterBegin()
-    PromptSetControlAction(DrinkPrompt, Config.keys.drink)
-    PromptSetText(DrinkPrompt, drinkStr)
-    PromptSetEnabled(DrinkPrompt, 1)
-    PromptSetVisible(DrinkPrompt, 1)
-    PromptSetStandardMode(DrinkPrompt, 1)
-    PromptSetGroup(DrinkPrompt, WaterGroup)
-    PromptRegisterEnd(DrinkPrompt)
+        local drinkStr = CreateVarString(10, 'LITERAL_STRING', _U('drink'))
+        DrinkPrompt = PromptRegisterBegin()
+        PromptSetControlAction(DrinkPrompt, Config.keys.drink)
+        PromptSetText(DrinkPrompt, drinkStr)
+        PromptSetEnabled(DrinkPrompt, true)
+        PromptSetStandardMode(DrinkPrompt, true)
+        PromptSetGroup(DrinkPrompt, WaterGroup)
+        PromptRegisterEnd(DrinkPrompt)
+
+        PromptsStarted = true
+    end
 end
 
 function DrawText3Ds(x, y, z, text)
