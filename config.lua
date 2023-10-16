@@ -3,7 +3,12 @@ Config = {}
 Config.defaultlang = 'en_lang'
 ---------------------------------------------------------------
 
-Config.app = 1 -- Vorp Metabolism = 1 / Fred Metabolism Free = 2 / Outsider Needs = 3 / Fred Metabolism Paid = 4
+-- Vorp Metabolism = 1
+-- Fred Metabolism Free = 2
+-- Outsider Needs = 3
+-- Fred Metabolism Paid v1.4 = 4
+-- Fred Metabolism Paid v2 = 5
+Config.app = 1
 ---------------------------------------------------------------
 
 Config.keys = {
@@ -12,6 +17,20 @@ Config.keys = {
     fillBucket  = 0xCEFD9220, -- [E] Fill Bucket at Water Pumps and Wild Waters
     fillCanteen = 0x27D1C284, -- [R] Fill Canteen at Water Pumps and Wild Waters
 }
+---------------------------------------------------------------
+
+Config.pumpsEnabled = true -- Enable the Use of Water Pumps
+
+Config.pumpCanteen  = true -- Fill Canteen at Pumps
+Config.pumpBucket   = true -- Fill Bucket at Pumps
+---------------------------------------------------------------
+
+Config.wildEnabled = true -- Enable the Use of Rivers and Lakes (Wild Waters)
+
+Config.wildCanteen = true -- Fill Canteen in Wild Waters
+Config.wildBucket  = true -- Fill Bucket in Wild Waters
+Config.wildWash    = true -- Wash in Wild Waters
+Config.wildDrink   = true -- Drink Directly from Wild Waters
 ---------------------------------------------------------------
 
 -- Item Names from Database
