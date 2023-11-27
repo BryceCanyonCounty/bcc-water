@@ -376,6 +376,13 @@ function PlayerStats(isWild)
             else
                 exports.fred_metabolism:consume('thirst' , Config.thirst)
             end
+        end,
+        [6] = function()
+            if isWild then
+                TriggerEvent("rsd_metabolism:AddMeta", 0, Config.wildThirst, 0, 0, 0, 0, 0, 0, 0, "none", 0)
+            else
+                TriggerEvent("rsd_metabolism:AddMeta", 0, Config.thirst, 0, 0, 0, 0, 0, 0, 0, "none", 0)
+            end
         end
     }
     if appUpdate[app] then
