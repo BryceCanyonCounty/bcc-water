@@ -8,6 +8,7 @@ Config.defaultlang = 'en_lang'
 -- Outsider Needs = 3
 -- Fred Metabolism Paid v1.4 = 4
 -- Fred Metabolism Paid v2 = 5
+-- rsd Metabolism Paid = 6
 Config.app = 1
 ---------------------------------------------------------------
 
