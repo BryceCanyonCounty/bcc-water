@@ -1,9 +1,4 @@
-local VORPcore = {}
-TriggerEvent('getCore', function(core)
-    VORPcore = core
-end)
-
-local ClientRPC = exports.vorp_core:ClientRpcCall()
+local VORPcore = exports.vorp_core:GetCore()
 -- Prompts
 local FillCanteenPrompt
 local FillBucketPrompt
@@ -41,7 +36,7 @@ CreateThread(function()
                                 if pumpCanteen then
                                     PromptSetVisible(FillCanteenPrompt, true)
                                     if Citizen.InvokeNative(0xC92AC953F0A982AE, FillCanteenPrompt) then -- UiPromptHasStandardModeCompleted
-                                        local canFillCanteen = ClientRPC.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
+                                        local canFillCanteen = VORPcore.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
                                         if canFillCanteen then
                                             CanteenFill(true)
                                         else
@@ -54,7 +49,7 @@ CreateThread(function()
                                 if pumpBucket then
                                     PromptSetVisible(FillBucketPrompt, true)
                                     if Citizen.InvokeNative(0xC92AC953F0A982AE, FillBucketPrompt) then -- UiPromptHasStandardModeCompleted
-                                        local canFillBucket = ClientRPC.Callback.TriggerAwait('bcc-water:GetBucket')
+                                        local canFillBucket = VORPcore.Callback.TriggerAwait('bcc-water:GetBucket')
                                         if canFillBucket then
                                             BucketFill(true)
                                         else
@@ -71,7 +66,7 @@ CreateThread(function()
                                     DrawText3Ds(coords.x, coords.y, coords.z + 0.1, '~t6~R~q~ - '.. _U('fillCanteen'))
 
                                     if IsControlJustReleased(0, Config.keys.fillCanteen) then
-                                        local canFillCanteen = ClientRPC.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
+                                        local canFillCanteen = VORPcore.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
                                         if canFillCanteen then
                                             CanteenFill(true)
                                         else
@@ -83,7 +78,7 @@ CreateThread(function()
                                     DrawText3Ds(coords.x, coords.y, coords.z, '~t6~E~q~ - ' .. _U('fillBucket'))
 
                                     if IsControlJustReleased(0, Config.keys.fillBucket) then
-                                        local canFillBucket = ClientRPC.Callback.TriggerAwait('bcc-water:GetBucket')
+                                        local canFillBucket = VORPcore.Callback.TriggerAwait('bcc-water:GetBucket')
                                         if canFillBucket then
                                             BucketFill(true)
                                         else
@@ -134,7 +129,7 @@ CreateThread(function()
                                 if wildCanteen then
                                     PromptSetVisible(FillCanteenPrompt, true)
                                     if Citizen.InvokeNative(0xC92AC953F0A982AE, FillCanteenPrompt) then -- UiPromptHasStandardModeCompleted
-                                        local canFillCanteen = ClientRPC.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
+                                        local canFillCanteen = VORPcore.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
                                         if canFillCanteen then
                                             CanteenFill(false)
                                         else
@@ -148,7 +143,7 @@ CreateThread(function()
                                 if wildBucket then
                                     PromptSetVisible(FillBucketPrompt, true)
                                     if Citizen.InvokeNative(0xC92AC953F0A982AE, FillBucketPrompt) then -- UiPromptHasStandardModeCompleted
-                                        local canFillBucket = ClientRPC.Callback.TriggerAwait('bcc-water:GetBucket')
+                                        local canFillBucket = VORPcore.Callback.TriggerAwait('bcc-water:GetBucket')
                                         if canFillBucket then
                                             BucketFill(false)
                                         else
@@ -379,9 +374,16 @@ function PlayerStats(isWild)
         end,
         [6] = function()
             if isWild then
-                TriggerEvent("rsd_metabolism:AddMeta", 0, Config.wildThirst, 0, 0, 0, 0, 0, 0, 0, "none", 0)
+                TriggerEvent('rsd_metabolism:AddMeta', 0, Config.wildThirst, 0, 0, 0, 0, 0, 0, 0, 'none', 0)
             else
-                TriggerEvent("rsd_metabolism:AddMeta", 0, Config.thirst, 0, 0, 0, 0, 0, 0, 0, "none", 0)
+                TriggerEvent('rsd_metabolism:AddMeta', 0, Config.thirst, 0, 0, 0, 0, 0, 0, 0, 'none', 0)
+            end
+        end,
+        [7] = function()
+            if isWild then
+                TriggerServerEvent('hud.decrease', 'thirst', Config.wildThirst * 10)
+            else
+                TriggerServerEvent('hud.decrease', 'thirst', Config.thirst * 10)
             end
         end
     }
@@ -457,7 +459,7 @@ end
 
 RegisterNetEvent('bcc-water:UseCanteen', function()
     if UseCanteen then
-        local canDrink = ClientRPC.Callback.TriggerAwait('bcc-water:UpdateCanteen')
+        local canDrink = VORPcore.Callback.TriggerAwait('bcc-water:UpdateCanteen')
         if canDrink then
             DrinkCanteen(canDrink)
         else

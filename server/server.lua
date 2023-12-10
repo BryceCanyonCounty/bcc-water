@@ -1,16 +1,11 @@
-local VORPcore = {}
-TriggerEvent('getCore', function(core)
-    VORPcore = core
-end)
+local VORPcore = exports.vorp_core:GetCore()
 
 local Needs = {}
 TriggerEvent('Outsider_Needs', function(cb)
     Needs = cb
 end)
 
-local ServerRPC = exports.vorp_core:ServerRpcCall()
-
-ServerRPC.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb)
+VORPcore.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb)
 	local _source = source
     local itemCanteen = Config.canteen
     local canteen = exports.vorp_inventory:getItem(_source, itemCanteen)
@@ -35,7 +30,6 @@ ServerRPC.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb)
             end
         end
         cb(true)
-
     else
         VORPcore.NotifyRightTip(_source, _U('needCanteen'), 4000)
         cb(false)
@@ -48,7 +42,7 @@ exports.vorp_inventory:registerUsableItem(Config.canteen, function(data)
     TriggerClientEvent('bcc-water:UseCanteen', _source)
 end)
 
-ServerRPC.Callback.Register('bcc-water:UpdateCanteen', function(source, cb)
+VORPcore.Callback.Register('bcc-water:UpdateCanteen', function(source, cb)
     local _source = source
     local itemCanteen = Config.canteen
     local canteen = exports.vorp_inventory:getItem(_source, itemCanteen)
@@ -95,7 +89,7 @@ ServerRPC.Callback.Register('bcc-water:UpdateCanteen', function(source, cb)
 end)
 
 -- Check if Player has an Empty Bucket and Update
-ServerRPC.Callback.Register('bcc-water:GetBucket', function(source, cb)
+VORPcore.Callback.Register('bcc-water:GetBucket', function(source, cb)
     local _source = source
     local hasItem = exports.vorp_inventory:getItem(_source, Config.emptyBucket)
     if hasItem then
