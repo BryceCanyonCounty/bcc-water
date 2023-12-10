@@ -14,7 +14,7 @@ Add the canteen and bucket items to a store or crafting station for players to b
 - Players can wash in rivers and lakes
 - Players can take damage from drinking wild water
 
-#### Dependencies
+#### Dependencies (Make sure these are updated)
 - [vorp_core](https://github.com/VORPCORE/vorp-core-lua)
 - [vorp_inventory](https://github.com/VORPCORE/vorp_inventory-lua)
 
@@ -22,6 +22,8 @@ Add the canteen and bucket items to a store or crafting station for players to b
 - VORP Metabolism
 - Fred Metabolism
 - Outsider Needs Metabolism
+- RSD Metabolism
+- NXT Metabolism
 
 #### Installation
 - Add `bcc-water` folder to your resources folder
