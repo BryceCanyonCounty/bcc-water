@@ -253,7 +253,6 @@ function BucketFill(pumpAnim)
         -- Dataview snippet credit to Xakra and Ricx
         local DataStruct = DataView.ArrayBuffer(256 * 4)
         local hasData = Citizen.InvokeNative(0x345EC3B7EBDE1CB5, GetEntityCoords(playerPed), 2.0, DataStruct:Buffer(), 10) -- GetScenarioPointsInArea
-        print(hasData)
         if hasData then
             for i = 1, hasData do
                 local scenario = DataStruct:GetInt32(8 * i)
