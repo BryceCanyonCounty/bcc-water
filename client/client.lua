@@ -254,7 +254,7 @@ function BucketFill(pumpAnim)
         local DataStruct = DataView.ArrayBuffer(256 * 4)
         local hasData = Citizen.InvokeNative(0x345EC3B7EBDE1CB5, GetEntityCoords(playerPed), 2.0, DataStruct:Buffer(), 10) -- GetScenarioPointsInArea
         if hasData then
-            for i = 1, 1 do
+            for i = 1, 10 do
                 local scenario = DataStruct:GetInt32(8 * i)
                 local hash = Citizen.InvokeNative(0xA92450B5AE687AAF, scenario) -- GetScenarioPointType
                 if hash == joaat('PROP_HUMAN_PUMP_WATER') or hash == joaat('PROP_HUMAN_PUMP_WATER_BUCKET') then
@@ -333,8 +333,8 @@ end
 -- Boosts from Drinking
 function PlayerStats(isWild)
     local playerPed = PlayerPedId()
-    local health = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 0)) -- GetAttributeCoreValue
-    local stamina = tonumber(Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 1)) -- GetAttributeCoreValue
+    local health = Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 0, Citizen.ResultAsInteger()) -- GetAttributeCoreValue
+    local stamina = Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 1, Citizen.ResultAsInteger()) -- GetAttributeCoreValue
     local app = tonumber(Config.app)
     local appUpdate = {
         [1] = function()
@@ -389,12 +389,6 @@ function PlayerStats(isWild)
     }
     if appUpdate[app] then
         appUpdate[app]()
-        if health == nil then
-            health = 0
-        end
-        if stamina == nil then
-            stamina = 0
-        end
         if isWild then
             -- Wild Health
             if Config.wildHealth > 0 then
