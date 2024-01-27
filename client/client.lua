@@ -374,9 +374,9 @@ function PlayerStats(isWild)
         end,
         [6] = function()
             if isWild then
-                TriggerEvent('rsd_metabolism:AddMeta', 0, Config.wildThirst, 0, 0, 0, 0, 0, 0, 0, 'none', 0)
+                TriggerEvent('rsd_metabolism:SetMeta', {drink = Config.wildThirst})
             else
-                TriggerEvent('rsd_metabolism:AddMeta', 0, Config.thirst, 0, 0, 0, 0, 0, 0, 0, 'none', 0)
+                TriggerEvent('rsd_metabolism:SetMeta', {drink = Config.thirst})
             end
         end,
         [7] = function()
