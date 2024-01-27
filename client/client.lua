@@ -385,6 +385,13 @@ function PlayerStats(isWild)
             else
                 TriggerServerEvent('hud.decrease', 'thirst', Config.thirst * 10)
             end
+        end,
+        [8] = function()
+            if isWild then
+                TriggerEvent('hud:client:changeValue', 'Thirst', Config.wildThirst)
+            else
+                TriggerEvent('hud:client:changeValue', 'Thirst', Config.thirst)
+            end
         end
     }
     if appUpdate[app] then
