@@ -10,6 +10,7 @@ Config.defaultlang = 'en_lang'
 -- Fred Metabolism Paid v2 = 5
 -- RSD Metabolism Paid = 6
 -- NXT Metabolism Paid = 7
+-- Andrade Metabolism Paid = 8
 Config.app = 1
 ---------------------------------------------------------------
 
