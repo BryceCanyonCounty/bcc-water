@@ -388,9 +388,9 @@ function PlayerStats(isWild)
         end,
         [8] = function()
             if isWild then
-                TriggerEvent("hud:client:changeValue", "Thirst", Config.wildThirst)
+                TriggerEvent('hud:client:changeValue', 'Thirst', Config.wildThirst)
             else
-                TriggerEvent("hud:client:changeValue", "Thirst", Config.wildThirst)
+                TriggerEvent('hud:client:changeValue', 'Thirst', Config.thirst)
             end
         end
     }
