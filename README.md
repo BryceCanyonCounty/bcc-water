@@ -24,6 +24,7 @@ Add the canteen and bucket items to a store or crafting station for players to b
 - Outsider Needs Metabolism
 - RSD Metabolism
 - NXT Metabolism
+- Andrade Metabolism
 
 #### Installation
 - Add `bcc-water` folder to your resources folder
