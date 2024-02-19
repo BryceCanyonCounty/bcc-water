@@ -392,6 +392,13 @@ function PlayerStats(isWild)
             else
                 TriggerEvent('hud:client:changeValue', 'Thirst', Config.thirst)
             end
+        end,
+        [9] = function()
+            if isWild then
+                exports['fx-hud']:setStatus('thirst', Config.wildThirst)
+            else
+                exports['fx-hud']:setStatus('thirst', Config.thirst)
+            end
         end
     }
     if appUpdate[app] then
