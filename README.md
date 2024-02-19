@@ -25,6 +25,7 @@ Add the canteen and bucket items to a store or crafting station for players to b
 - RSD Metabolism
 - NXT Metabolism
 - Andrade Metabolism
+- FX-HUD
 
 #### Installation
 - Add `bcc-water` folder to your resources folder
