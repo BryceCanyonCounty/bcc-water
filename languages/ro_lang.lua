@@ -15,5 +15,4 @@ Locales["ro_lang"] = {
     needCanteen = "Ai nevoie de o pleosca!",
     needBucket = "Ai nevoie de o galeata goala!",
     waterPump = "Pompă de Apă"
-
 }
