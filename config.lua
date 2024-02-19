@@ -3,14 +3,15 @@ Config = {}
 Config.defaultlang = 'en_lang'
 ---------------------------------------------------------------
 
--- Vorp Metabolism = 1
--- Fred Metabolism Free = 2
--- Outsider Needs = 3
--- Fred Metabolism Paid v1.4 = 4
--- Fred Metabolism Paid v2 = 5
--- RSD Metabolism Paid = 6
--- NXT Metabolism Paid = 7
--- Andrade Metabolism Paid = 8
+-- Vorp Metabolism              = 1
+-- Fred Metabolism Free         = 2
+-- Outsider Needs               = 3
+-- Fred Metabolism Paid v1.4    = 4
+-- Fred Metabolism Paid v2      = 5
+-- RSD Metabolism Paid          = 6
+-- NXT Metabolism Paid          = 7
+-- Andrade Metabolism Paid      = 8
+-- FX-HUD                       = 9
 Config.app = 1
 ---------------------------------------------------------------
 
