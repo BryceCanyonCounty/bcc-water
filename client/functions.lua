@@ -38,9 +38,18 @@ function WildDrink()
     PlayerStats(true)
 end
 
-function WashPlayer()
+function PumpDrink()
+    PlayAnim('amb_work@prop_human_pump_water@male_a@idle_c', 'idle_g')
+    PlayerStats(true)
+end
+
+function WashPlayer(animType)
     local playerPed = PlayerPedId()
-    PlayAnim('amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d', 'idle_l')
+    if animType == "ground" then
+        PlayAnim('amb_misc@world_human_wash_face_bucket@ground@male_a@idle_d', 'idle_l')
+    elseif animType == "stand" then
+        PlayAnim('amb_misc@world_human_wash_face_bucket@table@male_a@idle_d', 'idle_l')
+    end
     ClearPedEnvDirt(playerPed)
     ClearPedDamageDecalByZone(playerPed, 10, 'ALL')
     ClearPedBloodDamage(playerPed)

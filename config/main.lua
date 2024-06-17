@@ -16,8 +16,8 @@ Config.app = 1
 ---------------------------------------------------------------
 
 Config.keys = {
-    drink       = 0x760A9C6F, -- [G] Drink from Wild Waters
-    wash        = 0x80F28E95, -- [L] Wash Player in Wild Waters
+    drink       = 0x760A9C6F, -- [G] Drink at Water Pumps and Wild Waters
+    wash        = 0x80F28E95, -- [L] Wash Player at Water Pumps and Wild Waters
     fillBucket  = 0xCEFD9220, -- [E] Fill Bucket at Water Pumps and Wild Waters
     fillCanteen = 0x27D1C284, -- [R] Fill Canteen at Water Pumps and Wild Waters
 }
@@ -27,6 +27,8 @@ Config.pumpsEnabled = true -- Enable the Use of Water Pumps
 
 Config.pumpCanteen  = true -- Fill Canteen at Pumps
 Config.pumpBucket   = true -- Fill Bucket at Pumps
+Config.pumpWash     = true -- Wash at Pumps
+Config.pumpDrink    = true -- Drink at Pumps
 ---------------------------------------------------------------
 
 Config.wildEnabled = true -- Enable the Use of Rivers and Lakes (Wild Waters)
@@ -86,6 +88,10 @@ Config.objects = {
     'p_waterpump01x',
     'p_wellpumpnbx01x',
     'p_sink02x',
-    'p_drysink01x'
+    'p_drysink01x',
+    'p_drysink01x',
+    'p_sink03x',
+    'p_barrel_ladle01x',
+    'p_barrel_wash01x',
 }
 ---------------------------------------------------------------

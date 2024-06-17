@@ -29,6 +29,8 @@ AddEventHandler('bcc-water:PumpWater', function()
     local objects, objectExists
     local pumpCanteen = Config.pumpCanteen
     local pumpBucket = Config.pumpBucket
+    local pumpWash = Config.pumpWash
+    local pumpDrink = Config.pumpDrink
     while true do
         local playerPed = PlayerPedId()
         local sleep = 1000
@@ -52,6 +54,8 @@ AddEventHandler('bcc-water:PumpWater', function()
             PromptSetActiveGroupThisFrame(PumpGroup, CreateVarString(10, 'LITERAL_STRING', _U('waterPump')))
             PromptSetVisible(FillCanteenPrompt, pumpCanteen)
             PromptSetVisible(FillBucketPrompt, pumpBucket)
+            PromptSetVisible(WashPrompt, pumpWash)
+            PromptSetVisible(DrinkPrompt, pumpDrink)
 
             if pumpCanteen and PromptHasHoldModeCompleted(FillCanteenPrompt) then
                 local canFillCanteen = VORPcore.Callback.TriggerAwait('bcc-water:GetCanteenLevel')
@@ -69,6 +73,14 @@ AddEventHandler('bcc-water:PumpWater', function()
                     goto END
                 end
                 BucketFill(true)
+            end
+
+            if pumpWash and PromptHasHoldModeCompleted(WashPrompt) then
+                WashPlayer("stand")
+            end
+
+            if pumpDrink and PromptHasHoldModeCompleted(DrinkPrompt) then
+                PumpDrink()
             end
 
         else
@@ -95,6 +107,22 @@ AddEventHandler('bcc-water:PumpWater', function()
                         goto END
                     end
                     BucketFill(true)
+                end
+            end
+
+            if pumpWash then
+                DrawText3Ds(PlayerCoords.x, PlayerCoords.y, PlayerCoords.z + 0.2, '~t6~L~q~ - ' .. _U('wash'))
+
+                if IsControlJustReleased(0, Config.keys.wash) then
+                    WashPlayer("stand")
+                end
+            end
+
+            if pumpDrink then
+                DrawText3Ds(PlayerCoords.x, PlayerCoords.y, PlayerCoords.z + 0.3, '~t6~G~q~ - ' .. _U('drink'))
+
+                if IsControlJustReleased(0, Config.keys.drink) then
+                    PumpDrink()
                 end
             end
         end
@@ -160,7 +188,7 @@ AddEventHandler('bcc-water:WildWater', function()
             BucketFill(false)
         end
         if wildWash and PromptHasHoldModeCompleted(WashPrompt) then
-            WashPlayer()
+            WashPlayer("ground")
         end
         if wildDrink and PromptHasHoldModeCompleted(DrinkPrompt) then
             WildDrink()
