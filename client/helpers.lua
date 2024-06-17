@@ -156,6 +156,7 @@ function StartPrompts()
         PromptSetEnabled(WashPrompt, true)
         PromptSetHoldMode(WashPrompt, 1000)
         PromptSetGroup(WashPrompt, WaterGroup)
+        PromptSetGroup(WashPrompt, PumpGroup)
         PromptRegisterEnd(WashPrompt)
 
         DrinkPrompt = PromptRegisterBegin()
@@ -164,6 +165,7 @@ function StartPrompts()
         PromptSetEnabled(DrinkPrompt, true)
         PromptSetHoldMode(DrinkPrompt, 1000)
         PromptSetGroup(DrinkPrompt, WaterGroup)
+        PromptSetGroup(DrinkPrompt, PumpGroup)
         PromptRegisterEnd(DrinkPrompt)
 
         PromptsStarted = true
