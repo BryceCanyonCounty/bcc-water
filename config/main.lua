@@ -1,6 +1,6 @@
 Config = {}
 
-Config.defaultlang = 'en_lang'
+Config.defaultlang = 'de_lang'
 ---------------------------------------------------------------
 
 -- Vorp Metabolism              = 1
@@ -12,7 +12,7 @@ Config.defaultlang = 'en_lang'
 -- NXT Metabolism Paid          = 7
 -- Andrade Metabolism Paid      = 8
 -- FX-HUD                       = 9
-Config.app = 1
+Config.app = 6
 ---------------------------------------------------------------
 
 Config.keys = {
@@ -58,28 +58,31 @@ Config.showMessages = true -- Show / Hide Canteen Level Messages
 ---------------------------------------------------------------
 
 -- Boosts Drinking from Canteen
-Config.health  = 10 -- Default: 10 / Value is 0 - 100 / Set to 0 to Disable
+Config.health  = 0 -- Default: 10 / Value is 0 - 100 / Set to 0 to Disable
 
-Config.stamina = 20 -- Default: 20 / Value is 0 - 100 / Set to 0 to Disable
+Config.stamina = 0 -- Default: 20 / Value is 0 - 100 / Set to 0 to Disable
 
 Config.thirst  = 50 -- Default: 50 / Value is 0 - 100
 ---------------------------------------------------------------
 
 -- Effects Drinking from Wild Waters
-Config.gainHealth = true -- true = Gain Health by wildHealth Value / false = Lose by Value
+Config.gainHealth = false -- true = Gain Health by wildHealth Value / false = Lose by Value
 Config.wildHealth  = 5  -- Default: 5 / Value is 0 - 100 / Set to 0 to Disable
 
-Config.gainStamina = true -- true = Gain Stamina by wildStamina Value / false = Lose by Value
+Config.gainStamina = false -- true = Gain Stamina by wildStamina Value / false = Lose by Value
 Config.wildStamina = 10 -- Default: 10 / Value is 0 - 100 / Set to 0 to Disable
 
 Config.wildThirst  = 25 -- Default: 25 / Value is 0 - 100
 ---------------------------------------------------------------
 
+Config.CanteenUsage = 5 -- Use 5 Durability per Drink
+
 -- Translate Canteen Metadata
 Config.lang = {
-    level = 'Level',
-    empty = 'Empty',
-    full  = 'Full'
+    level = 'Füllstand',
+    empty = 'Leer',
+    full  = 'Voll',
+    Durability = 'Haltbarkeit: ',
 }
 ---------------------------------------------------------------
 
