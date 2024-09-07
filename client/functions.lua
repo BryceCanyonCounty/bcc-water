@@ -15,8 +15,8 @@ function DrinkCanteen(level)
     SetEntityAlpha(Canteen, 255, false)
     SetModelAsNoLongerNeeded(modelHash)
     TaskPlayAnim(playerPed, dict, anim, 1.0, 1.0, 5000, 31, 0.0, false, false, false)
-    AttachEntityToEntity(Canteen, playerPed, boneIndex, 0.02, 0.028, 0.001, 15.0, 175.0, 0.0, true, true, false, true, 1, true)
-    Wait(6000)
+    AttachEntityToEntity(Canteen, playerPed, boneIndex, 0.02, 0.028, 0.001, 15.0, 175.0, 0.0, true, true, false, true, 1, true, false, false)
+    Wait(5500)
     DeleteObject(Canteen)
     ClearPedTasks(playerPed)
     PlayerStats(false)
@@ -29,7 +29,7 @@ function DrinkCanteen(level)
         [5] = _U('message_4')
     }
     if Config.showMessages then
-        VORPcore.NotifyRightTip(levelMessage[level], 5000)
+        VORPcore.NotifyRightTip(levelMessage[level], 4000)
     end
 end
 
@@ -53,7 +53,7 @@ function WashPlayer(animType)
     ClearPedEnvDirt(playerPed)
     ClearPedDamageDecalByZone(playerPed, 10, 'ALL')
     ClearPedBloodDamage(playerPed)
-    SetPedDirtCleaned(playerPed, 0.0, -1, 1, 1)
+    SetPedDirtCleaned(playerPed, 0.0, -1, true, true)
 end
 
 RegisterNetEvent('bcc-water:UseCanteen', function()
@@ -64,7 +64,7 @@ RegisterNetEvent('bcc-water:UseCanteen', function()
 
         DrinkCanteen(canDrink)
         UseCanteen = false
-        Wait(8000)
+        Wait(6000)
         UseCanteen = true
     end
 end)

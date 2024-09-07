@@ -75,11 +75,15 @@ Config.wildStamina = 10 -- Default: 10 / Value is 0 - 100 / Set to 0 to Disable
 Config.wildThirst  = 25 -- Default: 25 / Value is 0 - 100
 ---------------------------------------------------------------
 
+Config.CanteenUsage = 5 -- Default: 5 / Durability used per Drink
+---------------------------------------------------------------
+
 -- Translate Canteen Metadata
 Config.lang = {
     level = 'Level',
     empty = 'Empty',
-    full  = 'Full'
+    full  = 'Full',
+    Durability = 'Durability',
 }
 ---------------------------------------------------------------
 
