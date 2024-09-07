@@ -47,7 +47,6 @@ exports.vorp_inventory:registerUsableItem(Config.canteen, function(data)
     local meta = canteen['metadata']
     local durability = meta.durability
     local canteenUsage = Config.CanteenUsage
-    print(durability)
     if (durability == nil) or (durability >= canteenUsage) then
         TriggerClientEvent('bcc-water:UseCanteen', src)
     elseif durability < canteenUsage then
