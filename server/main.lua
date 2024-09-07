@@ -20,7 +20,7 @@ VORPcore.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb)
     if next(meta) == nil then
         exports.vorp_inventory:subItem(src, itemCanteen, 1, {})
         exports.vorp_inventory:addItem(src, itemCanteen, 1, {
-            description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. 100 .. '</span>', level = 5, durability = 100
+            description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. '100' .. '</span>', level = 5, durability = 100
         })
     else
         local level = meta.level
@@ -28,7 +28,7 @@ VORPcore.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb)
         if level < 5 then
             exports.vorp_inventory:subItem(src, itemCanteen, 1, meta)
             exports.vorp_inventory:addItem(src, itemCanteen, 1, {
-                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. durability .. '</span>', level = 5, durability = durability - Config.CanteenUsage
+                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. Config.lang.full .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. tostring(durability - Config.CanteenUsage) .. '</span>', level = 5, durability = durability - Config.CanteenUsage
             })
         else
             VORPcore.NotifyRightTip(src, _U('notEmpty'), 4000)
@@ -45,12 +45,14 @@ exports.vorp_inventory:registerUsableItem(Config.canteen, function(data)
     local itemCanteen = Config.canteen
     local canteen = exports.vorp_inventory:getItem(src, itemCanteen)
     local meta = canteen['metadata']
-    if meta.durability == nil then
+    local durability = meta.durability
+    local canteenUsage = Config.CanteenUsage
+    print(durability)
+    if (durability == nil) or (durability >= canteenUsage) then
         TriggerClientEvent('bcc-water:UseCanteen', src)
-    elseif meta.durability > Config.CanteenUsage then
-        TriggerClientEvent('bcc-water:UseCanteen', src)
-    elseif meta.durability < Config.CanteenUsage then
+    elseif durability < canteenUsage then
         exports.vorp_inventory:subItem(src, itemCanteen, 1, meta)
+        VORPcore.NotifyRightTip(src, _U('needCanteen'), 4000)
     end
 end)
 
@@ -69,28 +71,28 @@ VORPcore.Callback.Register('bcc-water:UpdateCanteen', function(source, cb)
         [2] = function()
             exports.vorp_inventory:subItem(src, itemCanteen, 1, meta)
             exports.vorp_inventory:addItem(src, itemCanteen, 1, {
-                description = Config.lang.level .. ' : ' .. '<span style=color:red;>' .. Config.lang.empty .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. durability .. '</span>', level = 1, durability = durability - Config.CanteenUsage
+                description = Config.lang.level .. ' : ' .. '<span style=color:red;>' .. Config.lang.empty .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. tostring(durability - Config.CanteenUsage) .. '</span>', level = 1, durability = durability
             })
         end,
 
         [3] = function()
             exports.vorp_inventory:subItem(src, itemCanteen, 1, meta)
             exports.vorp_inventory:addItem(src, itemCanteen, 1, {
-                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '25%' .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. durability .. '</span>', level = 2, durability = durability - Config.CanteenUsage
+                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '25%' .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. tostring(durability - Config.CanteenUsage) .. '</span>', level = 2, durability = durability - Config.CanteenUsage
             })
         end,
 
         [4] = function()
             exports.vorp_inventory:subItem(src, itemCanteen, 1, meta)
             exports.vorp_inventory:addItem(src, itemCanteen, 1, {
-                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '50%' .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. durability .. '</span>', level = 3, durability = durability - Config.CanteenUsage
+                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '50%' .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. tostring(durability - Config.CanteenUsage) .. '</span>', level = 3, durability = durability - Config.CanteenUsage
             })
         end,
 
         [5] = function()
             exports.vorp_inventory:subItem(src, itemCanteen, 1, meta)
             exports.vorp_inventory:addItem(src, itemCanteen, 1, {
-                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '75%' .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. durability .. '</span>', level = 4, durability = durability - Config.CanteenUsage
+                description = Config.lang.level .. ' : ' .. '<span style=color:green;>' .. '75%' .. '</span>' .. ' ' .. Config.lang.Durability .. ' : ' .. '<span style=color:yellow;>' .. tostring(durability - Config.CanteenUsage) .. '</span>', level = 4, durability = durability - Config.CanteenUsage
             })
         end
     }
@@ -112,7 +114,7 @@ VORPcore.Callback.Register('bcc-water:GetBucket', function(source, cb)
     local hasItem = exports.vorp_inventory:getItem(src, Config.emptyBucket)
 
     if not hasItem then
-        VORPcore.NotifyRightTip(src, _U('needBucket'))
+        VORPcore.NotifyRightTip(src, _U('needBucket'), 4000)
         cb(false)
         return
     end
