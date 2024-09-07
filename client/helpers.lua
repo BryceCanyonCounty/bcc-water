@@ -53,7 +53,7 @@ function CanteenFill(pumpAnim)
     ClearPedTasks(playerPed)
     Filling = false
     if Config.showMessages then
-        VORPcore.NotifyRightTip(_U('fullCanteen'), 5000)
+        VORPcore.NotifyRightTip(_U('fullCanteen'), 4000)
     end
 end
 
@@ -101,7 +101,7 @@ function BucketFill(pumpAnim)
 
     Filling = false
     if Config.showMessages then
-        VORPcore.NotifyRightTip(_U('fullBucket'), 5000)
+        VORPcore.NotifyRightTip(_U('fullBucket'), 4000)
     end
 end
 
