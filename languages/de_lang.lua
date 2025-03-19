@@ -1,18 +1,19 @@
----------------------------------- German/Deutsch -------------------------------------------
 Locales["de_lang"] = {
 
     fillCanteen = "Feldflasche auffüllen",
     fillBucket = "Eimer Füllen",
+    fillBottle = "Flasche Füllen",
     wash = "Waschen",
     drink = "Trinken",
     fullCanteen = "Deine Feldflasche ist voll.",
     fullBucket = "Dein Eimer ist Voll.",
-    message_4 = "Feldflasche ist zu ~o~75 ~q~Prozent voll.",
-    message_3 = "Feldflasche ist zu ~o~50 ~q~Prozent voll.",
-    message_2 = "Feldflasche ist zu ~o~25 ~q~Prozent voll.",
-    message_1 = "Deine Feldflasche ist leer!",
-    notEmpty = "Deine Feldflasche ist nicht leer.",
+    fullBottle = "Deine Flasche ist voll.",
+    emptyCanteen = "Deine Feldflasche ist leer!",
     needCanteen = "Du brauchst eine Feldflasche!",
     needBucket = "Du brauchst ein Leeren Eimer!",
-    waterPump = "Wasserpumpe"
+    needBottle = "Du brauchst eine leere Flasche!",
+    waterPump = "Wasserpumpe",
+    Durability = "Durability",
+    brokeCanteen = "Your canteen has broken!",
+    drinksLeft = "Drinks Left",
 }
