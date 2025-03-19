@@ -1,25 +1,28 @@
 # bcc-water
 
-#### Description
+**bcc-water** is a comprehensive script for managing water interactions in a RedM. It allows players to carry, drink, and refill a canteen, as well as interact with various water sources. This script integrates seamlessly with multiple metabolism systems and enhances the player experience by adding realistic water-related activities.
 
-Add the canteen and bucket items to a store or crafting station for players to buy or make. Fill your canteen and buckets at waterpumps while in town or **crouch and hold still** in wild waters to show drink, wash and fill prompts. See features for more details.
+## Features
 
-#### Features
-- Carry a canteen of water to drink
-- Drink 4 times from a full canteen
-- Quenches thirst when using supported metabolism scripts
-- Refill canteen and buckets at waterpumps, sinks, rivers and lakes
-- Drink directly from rivers and lakes to save the water in your canteen
-- Separate health, stamina and thirst config values for drinking from canteen and wild waters
-- Players can wash in rivers and lakes
-- Players can take damage from drinking wild water
+- **Hydration Management**: Carry a canteen of water to drink and quench thirst.
+- **Multi-Use Canteen**: Drink multiple times from a full canteen, with configurable usage limits.
+- **Metabolism Integration**: Compatible with various metabolism scripts to manage thirst levels.
+- **Water Source Interactions**:
+  - Refill canteens, buckets and bottles at water pumps, sinks, rivers, and lakes.
+  - Drink directly from natural water sources to preserve canteen water.
+- **Health and Stamina Configurations**: Separate settings for drinking from canteens and wild waters.
+- **Hygiene Options**: Players can wash in rivers, lakes, and at water pumps or sinks.
+- **Risk Factor**: Players may take damage from drinking untreated wild water.
+- **Utility**: Fill water buckets and bottles for use in other scripts.
 
-#### Dependencies
+## Dependencies
+
 - [vorp_core](https://github.com/VORPCORE/vorp-core-lua)
 - [vorp_inventory](https://github.com/VORPCORE/vorp_inventory-lua)
 - [bcc-utils](https://github.com/BryceCanyonCounty/bcc-utils)
 
-#### Supported Metablolism Scripts
+## Supported Metabolism Scripts
+
 - VORP Metabolism
 - Fred Metabolism
 - Outsider Needs Metabolism
@@ -28,18 +31,21 @@ Add the canteen and bucket items to a store or crafting station for players to b
 - Andrade Metabolism
 - FX-HUD
 
-#### Installation
-- Add `bcc-water` folder to your resources folder
-- Add `ensure bcc-water` to your `resources.cfg`
-- Ensure this script *after* your metabolism script
-- Run the included database file `water.sql`
-- Add images from `img` folder to: `...\vorp_inventory\html\img\items`
-- Add items to a store or crafting station for player use
-- Set your metabolism script in the `config/main.lua` file
-- Restart server
+## Installation
 
-#### Credits
-- green_canteen
+1. **Add Script to Resources**: Place the `bcc-water` folder in your resources directory.
+2. **Update `server.cfg`**: Add `ensure bcc-water` to your `server.cfg` file.
+3. **Script Load Order**: Ensure this script is loaded after your metabolism script and other dependencies.
+4. **Database Setup**: Run the included `water.sql` file to add necessary items to your database.
+5. **Image Integration**: Copy images from the `img` folder to `...\vorp_inventory\html\img\items`.
+6. **Store/Crafting Setup**: Add items to a store or crafting station for player access.
+7. **Configuration**: Set your metabolism script in the `config/main.lua` file.
+8. **Restart Server**: Restart your server to apply the changes.
 
-#### GitHub
-- https://github.com/BryceCanyonCounty/bcc-water
+## Inspiration
+
+- **green_canteen**: This script draws inspiration from the green_canteen script.
+
+## GitHub Repository
+
+- [bcc-water](https://github.com/BryceCanyonCounty/bcc-water)
