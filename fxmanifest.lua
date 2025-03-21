@@ -14,7 +14,8 @@ shared_scripts {
 client_scripts {
 	'client/dataview.lua',
     'client/main.lua',
-    'client/functions.lua'
+    'client/functions.lua',
+    'client/menus/input.lua'
 }
 
 server_scripts {
