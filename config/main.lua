@@ -1,6 +1,6 @@
 Config = {
 
-    defaultlang      = 'en_lang',
+    defaultlang = 'en_lang',
     ---------------------------------------------------------------
 
     devMode = {
@@ -32,23 +32,35 @@ Config = {
 
     -- Manage Activities at Water Pumps and Other Objects
     pump = {
-        active  = true, -- Enable the Use of Water Pumps and Other Objects
-        canteen = true, -- Allow to Fill Canteen
-        bucket  = true, -- Allow to Fill Bucket
-        bottle  = true, -- Allow to Fill Bottle
-        wash    = true, -- Allow Player to Wash
-        drink   = true, -- Allow Player to Drink
+        active  = true,       -- Enable the Use of Water Pumps and Other Objects
+        canteen = true,       -- Allow to Fill Canteen
+        bucket  = true,       -- Allow to Fill Bucket
+        bottle  = true,       -- Allow to Fill Bottle
+        wash    = true,       -- Allow Player to Wash
+        drink   = true,       -- Allow Player to Drink
+        multi   = {
+            bottles = true,   -- Allow to Fill Multiple Bottles at Once
+            bottleAmount = 5, -- Maximum Amount of Bottles to Fill at Once
+            buckets = true,   -- Allow to Fill Multiple Buckets at Once
+            bucketAmount = 5  -- Maximum Amount of Buckets to Fill at Once
+        }
     },
     ---------------------------------------------------------------
 
     -- Manage Activities in Rivers and Lakes (Wild Waters)
     wild = {
-        active  = true, -- Enable the Use of Rivers and Lakes (Wild Waters)
-        canteen = true, -- Allow to Fill Canteen
-        bucket  = true, -- Allow to Fill Bucket
-        bottle  = true, -- Allow to Fill Bottle
-        wash    = true, -- Allow Player to Wash
-        drink   = true, -- Allow Player to Drink
+        active  = true,    -- Enable the Use of Wild Waters
+        canteen = true,    -- Allow to Fill Canteen
+        bucket  = true,    -- Allow to Fill Bucket
+        bottle  = true,    -- Allow to Fill Bottle
+        wash    = true,    -- Allow Player to Wash
+        drink   = true,    -- Allow Player to Drink
+        multi   = {
+            bottles = true,   -- Allow to Fill Multiple Bottles at Once
+            bottleAmount = 5, -- Maximum Amount of Bottles to Fill at Once
+            buckets = true,   -- Allow to Fill Multiple Buckets at Once
+            bucketAmount = 5  -- Maximum Amount of Buckets to Fill at Once
+        }
     },
     ---------------------------------------------------------------
 
@@ -63,7 +75,7 @@ Config = {
     ---------------------------------------------------------------
 
     durability = {
-        canteen = 20, -- Durability used per Drink and Fill
+        canteen = 5, -- Durability used per Drink
     },
     ---------------------------------------------------------------
 
