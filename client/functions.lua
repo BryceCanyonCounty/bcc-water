@@ -70,7 +70,7 @@ local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage
         SetEntityVisible(Container, true)
         SetEntityAlpha(Container, 255, false)
         SetModelAsNoLongerNeeded(modelHash)
-        AttachEntityToEntity(Container, playerPed, boneIndex, 0.12, 0.09, -0.05, 306.0, 18.0, 0.0, true, true, false, true, 2, true)
+        AttachEntityToEntity(Container, playerPed, boneIndex, 0.12, 0.00, -0.10, 306.0, 18.0, 0.0, true, true, false, true, 2, true)
 
         local animDict = 'amb_work@world_human_crouch_inspect@male_c@idle_a'
         LoadAnim(animDict)
@@ -120,12 +120,12 @@ end
 
 function CanteenFill(pumpAnim)
     DebugPrint("Filling canteen.")
-    FillContainer(pumpAnim, 'p_cs_canteen_hercule', joaat('p_cs_canteen_hercule'), _U('fullCanteen'))
+    FillContainer(pumpAnim, 'p_cs_canteen_hercule', joaat('p_cs_canteen_hercule'), _U('fillingComplete'))
 end
 
 function BottleFill(pumpAnim)
     DebugPrint("Filling bottle.")
-    FillContainer(pumpAnim, 'p_bottlebeer01a_2', joaat('p_bottlebeer01a_2'), _U('fullBottle'))
+    FillContainer(pumpAnim, 'p_bottlebeer01a_2', joaat('p_bottlebeer01a_2'), _U('fillingComplete'))
 end
 
 function BucketFill(pumpAnim)
@@ -171,7 +171,7 @@ function BucketFill(pumpAnim)
 
     Filling = false
     if Config.showMessages then
-        Core.NotifyRightTip(_U('fullBucket'), 4000)
+        Core.NotifyRightTip(_U('fillingComplete'), 4000)
     end
     DebugPrint("Bucket filled successfully.")
 end
