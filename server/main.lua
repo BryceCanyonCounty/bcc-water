@@ -10,11 +10,15 @@ local function DebugPrint(message)
     end
 end
 
--- Update the canteen's metadata with the current number of drinks left and durability
-local function updateCanteenMetadata(src, canteenId, canteenDesc, drinksLeft, durability)
-    local description = canteenDesc .. '<br>' .. _U('drinksLeft') .. ' : ' .. tostring(drinksLeft) .. '/' .. MaxCanteenDrinks .. '<br>' .. _U('Durability') .. ' : ' .. tostring(durability) .. '%'
+---@param src number
+---@param canteenId number
+---@param drinksLeft number
+---@param durability number
+local function updateCanteenMetadata(src, canteenId, drinksLeft, durability)
+    local description = _U('canteenDesc') .. '<br>'
+    .. _U('drinksLeft') .. ' : ' .. tostring(drinksLeft) .. '/' .. tostring(MaxCanteenDrinks) .. '<br>'
+    .. _U('Durability') .. ' : ' .. tostring(durability) .. '%'
 
-    -- Update the item metadata in the inventory
     exports.vorp_inventory:setItemMetadata(src, canteenId, {
         description = description,
         drinksLeft = drinksLeft,
@@ -50,13 +54,13 @@ Core.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb)
 
     -- Fill the canteen if it's new or not full
     if isNewCanteen then
-        updateCanteenMetadata(src, canteen.id, canteen.desc, MaxCanteenDrinks, 100)
+        updateCanteenMetadata(src, canteen.id, MaxCanteenDrinks, 100)
         DebugPrint('Filled new canteen for source: ' .. tostring(src))
     else
         local drinksLeft = meta.drinksLeft
         local durability = meta.durability
         if drinksLeft < MaxCanteenDrinks then
-            updateCanteenMetadata(src, canteen.id, canteen.desc, MaxCanteenDrinks, durability)
+            updateCanteenMetadata(src, canteen.id, MaxCanteenDrinks, durability)
             DebugPrint('Refilled canteen for source: ' .. tostring(src))
         else
             Core.NotifyRightTip(src, _U('fullCanteen'), 4000)
@@ -89,7 +93,7 @@ Core.Callback.Register('bcc-water:UpdateCanteen', function(source, cb)
 
     -- Decrement drinks left and update durability
     if drinksLeft and drinksLeft > 0 then
-        updateCanteenMetadata(src, canteen.id, canteen.desc, drinksLeft - 1, newDurability)
+        updateCanteenMetadata(src, canteen.id, drinksLeft - 1, newDurability)
         DebugPrint('Used canteen for source ' .. tostring(src) .. ': Drinks Left = ' .. tostring(drinksLeft - 1) .. ', New Durability = ' .. tostring(newDurability) .. '%')
 
         -- Remove the canteen if durability is too low
@@ -108,7 +112,9 @@ Core.Callback.Register('bcc-water:UpdateCanteen', function(source, cb)
 end)
 
 -- Check if Player has an Item and Update Inventory
-Core.Callback.Register('bcc-water:GetItem', function(source, cb, itemType)
+---@param itemType string
+---@param itemAmount number
+Core.Callback.Register('bcc-water:GetItem', function(source, cb, itemType, itemAmount)
     local src = source
     local user = Core.getUser(src)
 
@@ -118,31 +124,22 @@ Core.Callback.Register('bcc-water:GetItem', function(source, cb, itemType)
         return cb(false)
     end
 
-    local emptyItem, fullItem, notification
-    if itemType == 'bucket' then
-        emptyItem = Config.emptyBucket
-        fullItem = Config.fullBucket
-        notification = _U('needBucket')
-    elseif itemType == 'bottle' then
-        emptyItem = Config.emptyBottle
-        fullItem = Config.fullBottle
-        notification = _U('needBottle')
-    else
-        DebugPrint('Invalid item type for source: ' .. tostring(src))
-        return cb(false)
-    end
+    -- Set empty and full items and notifications based on item type
+    local emptyItem = itemType == 'bucket' and Config.emptyBucket or Config.emptyBottle
+    local fullItem = itemType == 'bucket' and Config.fullBucket or Config.fullBottle
+    local notification = itemType == 'bucket' and _U('needBucket') or _U('needBottle')
 
     -- Check if the player has the required item
-    local hasItem = exports.vorp_inventory:getItem(src, emptyItem)
-    if not hasItem then
+    local item = exports.vorp_inventory:getItem(src, emptyItem)
+    if not item or item.count < itemAmount then
         Core.NotifyRightTip(src, notification, 4000)
         DebugPrint('Source ' .. tostring(src) .. ' does not have the required item: ' .. emptyItem)
         return cb(false)
     end
 
     -- Update the inventory
-    exports.vorp_inventory:subItem(src, emptyItem, 1)
-    exports.vorp_inventory:addItem(src, fullItem, 1)
+    exports.vorp_inventory:subItem(src, emptyItem, itemAmount)
+    exports.vorp_inventory:addItem(src, fullItem, itemAmount)
     DebugPrint('Updated inventory for source ' .. tostring(src) .. ': Removed ' .. emptyItem .. ', Added ' .. fullItem)
 
     cb(true)
