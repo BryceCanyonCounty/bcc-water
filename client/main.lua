@@ -1,6 +1,6 @@
 Core = exports.vorp_core:GetCore()
+-- Prompts
 local Prompts = {}
--- Groups
 local PumpGroup = GetRandomIntInRange(0, 0xffffff)
 local WaterGroup = GetRandomIntInRange(0, 0xffffff)
 -- Water
@@ -47,6 +47,26 @@ local function DrawText(x, y, z, text)
     SetTextFontForCurrentCommand(9)
     BgSetTextColor(255, 255, 255, 215)
     DisplayText(CreateVarString(10, 'LITERAL_STRING', text, Citizen.ResultAsLong()), _x, _y)
+end
+
+---@param itemType string
+---@param pump boolean
+local function ManageItems(itemType, pump)
+    DebugPrint("ManageItems function called with itemType: " .. itemType .. ", pump: " .. tostring(pump))
+
+    local config = pump and Config.pump or Config.wild
+
+    if (itemType == 'bucket' and config.multi.buckets) or (itemType == 'bottle' and config.multi.bottles) then
+        OpenInputMenu(itemType, pump)
+    else
+        if Core.Callback.TriggerAwait('bcc-water:GetItem', itemType, 1) then
+            if itemType == 'bucket' then
+                BucketFill(pump)
+            else
+                BottleFill(pump)
+            end
+        end
+    end
 end
 
 -- Start main functions when character is selected
@@ -97,14 +117,21 @@ end)
 
 AddEventHandler('bcc-water:PumpWater', function()
     DebugPrint("PumpWater event triggered.")
-    local objects, objectExists
+    local objects = Config.objects
+    local objectExists
     local pumpActions = {
-        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = true, fullKey = 'fillCanteen', offset = 0.2},
-        {configKey = 'bucket', prompt = 'FillBucketPrompt', callback = 'bcc-water:GetItem', itemType = 'bucket', func = BucketFill, param = true, fullKey = 'fillBucket', offset = 0.1},
-        {configKey = 'bottle', prompt = 'FillBottlePrompt', callback = 'bcc-water:GetItem', itemType = 'bottle', func = BottleFill, param = true, fullKey = 'fillBottle', offset = 0},
-        {configKey = 'wash', prompt = 'WashPrompt', func = WashPlayer, param = 'stand', fullKey = 'wash', offset = 0.3},
-        {configKey = 'drink', prompt = 'DrinkPrompt', func = PumpDrink, param = nil, fullKey = 'drink', offset = 0.4}
+        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = {true}, fullKey = 'fillCanteen', offset = 0.2},
+        {configKey = 'bucket', prompt = 'FillBucketPrompt', func = ManageItems, param = {'bucket', true}, fullKey = 'fillBucket', offset = 0.1},
+        {configKey = 'bottle', prompt = 'FillBottlePrompt', func = ManageItems, param = {'bottle', true}, fullKey = 'fillBottle', offset = 0},
+        {configKey = 'wash', prompt = 'WashPrompt', func = WashPlayer, param = {'stand'}, fullKey = 'wash', offset = 0.3},
+        {configKey = 'drink', prompt = 'DrinkPrompt', func = PumpDrink, param = {}, fullKey = 'drink', offset = 0.4}
     }
+
+    local pumpCanteen = Config.pump.canteen
+    local pumpBucket = Config.pump.bucket
+    local pumpBottle = Config.pump.bottle
+    local pumpWash = Config.pump.wash
+    local pumpDrink = Config.pump.drink
 
     while true do
         local playerPed = PlayerPedId()
@@ -112,12 +139,10 @@ AddEventHandler('bcc-water:PumpWater', function()
 
         if IsEntityDead(playerPed) or not IsPedOnFoot(playerPed) or Filling then goto END end
 
-        objects = Config.objects
         objectExists = false
         for _, object in ipairs(objects) do
             if DoesObjectOfTypeExistAtCoords(PlayerCoords.x, PlayerCoords.y, PlayerCoords.z, 0.75, joaat(object), false) then
                 objectExists = true
-                DebugPrint("Object found: " .. object)
                 break
             end
         end
@@ -128,9 +153,15 @@ AddEventHandler('bcc-water:PumpWater', function()
 
         if Config.usePrompt then
             UiPromptSetActiveGroupThisFrame(PumpGroup, CreateVarString(10, 'LITERAL_STRING', _U('waterPump')))
+            UiPromptSetVisible(Prompts.FillCanteenPrompt, pumpCanteen)
+            UiPromptSetVisible(Prompts.FillBucketPrompt, pumpBucket)
+            UiPromptSetVisible(Prompts.FillBottlePrompt, pumpBottle)
+            UiPromptSetVisible(Prompts.WashPrompt, pumpWash)
+            UiPromptSetVisible(Prompts.DrinkPrompt, pumpDrink)
 
             for _, action in ipairs(pumpActions) do
                 if Config.pump[action.configKey] and PromptHasHoldModeCompleted(Prompts[action.prompt]) then
+                    Wait(500)
                     local canPerformAction = true
                     if action.callback then
                         if action.itemType then
@@ -141,7 +172,7 @@ AddEventHandler('bcc-water:PumpWater', function()
                     end
                     if canPerformAction then
                         if action.param then
-                            action.func(action.param)
+                            action.func(table.unpack(action.param))
                         else
                             action.func()
                         end
@@ -170,7 +201,7 @@ AddEventHandler('bcc-water:PumpWater', function()
                         end
                         if canPerformAction then
                             if action.param then
-                                action.func(action.param)
+                                action.func(table.unpack(action.param))
                             else
                                 action.func()
                             end
@@ -192,12 +223,18 @@ AddEventHandler('bcc-water:WildWater', function()
     DebugPrint("WildWater event triggered.")
     local water, foundWater, waterName
     local wildActions = {
-        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = false, fullKey = 'fillCanteen'},
-        {configKey = 'bucket', prompt = 'FillBucketPrompt', callback = 'bcc-water:GetItem', itemType = 'bucket', func = BucketFill, param = false, fullKey = 'fillBucket'},
-        {configKey = 'bottle', prompt = 'FillBottlePrompt', callback = 'bcc-water:GetItem', itemType = 'bottle', func = BottleFill, param = false, fullKey = 'fillBottle'},
-        {configKey = 'wash', prompt = 'WashPrompt', func = WashPlayer, param = 'ground', fullKey = 'wash'},
-        {configKey = 'drink', prompt = 'DrinkPrompt', func = WildDrink, param = nil, fullKey = 'drink'}
+        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = {false}, fullKey = 'fillCanteen'},
+        {configKey = 'bucket', prompt = 'FillBucketPrompt', func = ManageItems, param = {'bucket', false}, fullKey = 'fillBucket'},
+        {configKey = 'bottle', prompt = 'FillBottlePrompt', func = ManageItems, param = {'bottle', false}, fullKey = 'fillBottle'},
+        {configKey = 'wash', prompt = 'WashPrompt', func = WashPlayer, param = {'ground'}, fullKey = 'wash'},
+        {configKey = 'drink', prompt = 'DrinkPrompt', func = WildDrink, param = {}, fullKey = 'drink'}
     }
+
+    local wildCanteen = Config.wild.canteen
+    local wildBucket = Config.wild.bucket
+    local wildBottle = Config.wild.bottle
+    local wildWash = Config.wild.wash
+    local wildDrink = Config.wild.drink
 
     while true do
         local playerPed = PlayerPedId()
@@ -211,7 +248,6 @@ AddEventHandler('bcc-water:WildWater', function()
             if water == locationCfg.hash then
                 foundWater = true
                 waterName = locationCfg.name
-                DebugPrint("Water found: " .. waterName)
                 break
             end
         end
@@ -222,9 +258,15 @@ AddEventHandler('bcc-water:WildWater', function()
 
         sleep = 0
         UiPromptSetActiveGroupThisFrame(WaterGroup, CreateVarString(10, 'LITERAL_STRING', waterName))
+        UiPromptSetVisible(Prompts.FillCanteenPrompt, wildCanteen)
+        UiPromptSetVisible(Prompts.FillBucketPrompt, wildBucket)
+        UiPromptSetVisible(Prompts.FillBottlePrompt, wildBottle)
+        UiPromptSetVisible(Prompts.WashPrompt, wildWash)
+        UiPromptSetVisible(Prompts.DrinkPrompt, wildDrink)
 
         for _, action in ipairs(wildActions) do
             if Config.wild[action.configKey] and PromptHasHoldModeCompleted(Prompts[action.prompt]) then
+                Wait(500)
                 local canPerformAction = true
                 if action.callback then
                     if action.itemType then
@@ -235,7 +277,7 @@ AddEventHandler('bcc-water:WildWater', function()
                 end
                 if canPerformAction then
                     if action.param then
-                        action.func(action.param)
+                        action.func(table.unpack(action.param))
                     else
                         action.func()
                     end
@@ -252,9 +294,7 @@ AddEventHandler('bcc-water:WildWater', function()
 end)
 
 AddEventHandler('onResourceStop', function(resourceName)
-    if (GetCurrentResourceName() ~= resourceName) then
-        return
-    end
+    if (GetCurrentResourceName() ~= resourceName) then return end
 
     DebugPrint("Resource stopped, cleaning up...")
     ClearPedTasksImmediately(PlayerPedId())
