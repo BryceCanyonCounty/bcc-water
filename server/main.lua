@@ -7,7 +7,7 @@ local SickPlayers = {}
 
 local function DebugPrint(message)
     if DevModeActive then
-        print(message)
+        print('^1[DEV MODE] ^4' .. message)
     end
 end
 
@@ -112,7 +112,7 @@ Core.Callback.Register('bcc-water:UpdateCanteen', function(source, cb)
     cb(true)
 end)
 
-RegisterNetEvent('bcc-water:UpdateSickness', function(remaining)
+RegisterNetEvent('bcc-water:UpdateSickness', function(isSick)
     local src = source
     local user = Core.getUser(src)
 
@@ -122,29 +122,35 @@ RegisterNetEvent('bcc-water:UpdateSickness', function(remaining)
         return
     end
 
-    SickPlayers[src] = (remaining and remaining > 0) and (os.time() + remaining) or nil
+    local character = user.getUsedCharacter
+    local charid = character.charIdentifier
+
+    DebugPrint('Updating sickness for character ID: ' .. tostring(charid))
+
+    SickPlayers[charid] = isSick and true or nil
+    DebugPrint('Sickness status for character ID ' .. tostring(charid) .. ': ' .. tostring(isSick))
 end)
 
-RegisterNetEvent('bcc-water:CheckSickness', function()
+Core.Callback.Register('bcc-water:CheckSickness', function(source, cb)
     local src = source
     local user = Core.getUser(src)
 
     -- Check if the user exists
     if not user then
         DebugPrint('User not found for source: ' .. tostring(src))
-        return
+        return cb(false)
     end
 
-    local endTime = SickPlayers[src]
-    local remaining = endTime and (endTime - os.time())
-    if remaining and remaining > 0 then
-        TriggerClientEvent('ApplySicknessEffect', src, remaining, 30) -- tickInterval
-    end
-end)
+    local character = user.getUsedCharacter
+    local charid = character.charIdentifier
 
-AddEventHandler('playerDropped', function()
-    local src = source
-    SickPlayers[src] = nil
+    if SickPlayers[charid] then
+        DebugPrint('Sickness detected for character ID ' .. tostring(charid) .. ': ' .. tostring(SickPlayers[charid]))
+        return cb(true)
+    else
+        DebugPrint('No sickness detected for character ID ' .. tostring(charid))
+        return cb(false)
+    end
 end)
 
 -- Check if Player has an Item and Update Inventory
