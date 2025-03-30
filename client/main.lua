@@ -11,7 +11,7 @@ DevModeActive = Config.devMode.active
 
 function DebugPrint(message)
     if DevModeActive then
-        print(message)
+        print('^1[DEV MODE] ^4' .. message)
     end
 end
 
@@ -70,10 +70,21 @@ local function ManageItems(itemType, pump)
     end
 end
 
+local function PlayerLocation()
+    CreateThread(function()
+        while true do
+            Wait(1000)
+            PlayerCoords = GetEntityCoords(PlayerPedId())
+        end
+    end)
+end
+
 -- Start main functions when character is selected
 RegisterNetEvent('vorp:SelectedCharacter', function()
     DebugPrint('Character selected, starting main functions...')
+
     StartPrompts()
+    PlayerLocation()
 
     if Config.pump.active then
         DebugPrint('Triggering PumpWater event.')
@@ -85,21 +96,23 @@ RegisterNetEvent('vorp:SelectedCharacter', function()
         TriggerEvent('bcc-water:WildWater')
     end
 
-    TriggerServerEvent('bcc-water:CheckSickness')
     DebugPrint('Checking server for player sickness.')
-
-    while true do
-        Wait(1000)
-        PlayerCoords = GetEntityCoords(PlayerPedId())
+    local isSick = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
+    if isSick then
+        DebugPrint('Waiting to apply sickness effect...')
+        Wait(30000)
+        ApplySicknessEffect()
     end
- end)
+end)
 
  -- Command to restart main functions for development
 CreateThread(function()
     if Config.devMode.active then
         RegisterCommand(Config.devMode.command, function()
             DebugPrint('Restarting main functions for development...')
+
             StartPrompts()
+            PlayerLocation()
 
             if Config.pump.active then
                 DebugPrint('Triggering PumpWater event for development.')
@@ -111,12 +124,10 @@ CreateThread(function()
                 TriggerEvent('bcc-water:WildWater')
             end
 
-            TriggerServerEvent('bcc-water:CheckSickness')
             DebugPrint('Checking server for player sickness.')
-
-            while true do
-                Wait(1000)
-                PlayerCoords = GetEntityCoords(PlayerPedId())
+            local isSick = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
+            if isSick then
+                ApplySicknessEffect()
             end
         end, false)
     end
