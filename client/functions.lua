@@ -234,7 +234,7 @@ function WildDrink()
     DebugPrint('Drinking from wild water.')
     PlayAnim('amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c', 'idle_h', 1, 10000)
     PlayerStats(true)
-    local sicknessChance = Config.sicknessChance
+    local sicknessChance = Config.sickness.chance
 
     -- Sickness chance roll
     if (sicknessChance > 0) and (math.random(1, 100) <= sicknessChance) then
@@ -267,8 +267,8 @@ RegisterNetEvent('bcc-water:DrinkBottle', function(wild)
     ClearPedTasks(playerPed)
 
     -- Apply effects
-    local sicknessChance = Config.sicknessChance
-    if wild and (sicknessChance > 0) and (math.random(1, 100) <= Config.sicknessChance) then
+    local sicknessChance = Config.sickness.chance
+    if wild and (sicknessChance > 0) and (math.random(1, 100) <= sicknessChance) then
         ApplySicknessEffect()
     end
 
@@ -321,33 +321,24 @@ function WashPlayer(animType)
     DebugPrint('Player washed successfully.')
 end
 
-
-function ApplySicknessEffect(duration, tickInterval)
+function ApplySicknessEffect()
     if IsSick then
         DebugPrint('Sickness effect already active, skipping.')
         return
     end
 
+    TriggerServerEvent('bcc-water:UpdateSickness', true)
+    DebugPrint('Trigger server event to update sickness status to true.')
+
     IsSick = true
-    duration = duration or 180
-    tickInterval = tickInterval or 15
-    local healthPerTick = 50 -- 🔥 Amount of health to remove per tick
+    local duration = Config.sickness.duration
+    local tickInterval = Config.sickness.interval
+    local healthPerTick = Config.sickness.health
     local remaining = duration
 
-    DebugPrint(string.format('Applying sickness effect: duration = %ds, tickInterval = %ds', duration, tickInterval))
+    DebugPrint('Sickness effect applied.')
 
     Core.NotifyRightTip(_U('feelingSick'), 4000)
-
-    -- Timer thread (unchanged)
-    CreateThread(function()
-        while IsSick and remaining > 0 do
-            Wait(1000)
-            remaining -= 1
-            if not IsSick then
-                break
-            end
-        end
-    end)
 
     -- Animation + Health Tick Thread
     CreateThread(function()
@@ -362,7 +353,7 @@ function ApplySicknessEffect(duration, tickInterval)
             local newHealth = currentHealth - healthPerTick
 
             -- Play animation
-            if remaining > (duration / 2) then
+            if (remaining > (duration / 2)) and (currentHealth > 200) then
                 DebugPrint('Playing coughing animation.')
                 PlayAnim('amb_wander@code_human_coughing_hacking@male_a@wip_base', 'wip_base', 1, 5000)
             else
@@ -382,33 +373,31 @@ function ApplySicknessEffect(duration, tickInterval)
             end
 
             Wait(tickInterval * 1000)
+            remaining = remaining - tickInterval
         end
 
         if IsSick then
             DebugPrint('Sickness ended. Forcing death if still alive.')
             Core.NotifyRightTip(_U('succumbed'), 6000)
+
             SetEntityHealth(playerPed, 0)
             IsSick = false
             ClearPedTasks(playerPed)
+
+            TriggerServerEvent('bcc-water:UpdateSickness', false)
             DebugPrint('Sickness effect fully cleared.')
         end
     end)
-
-    TriggerServerEvent('bcc-water:UpdateSickness', duration)
-    DebugPrint('Triggered server event to update sickness status.')
 end
-
-
-RegisterNetEvent('bcc-water:ApplySicknessEffect', function(duration, tick)
-    ApplySicknessEffect(duration, tick)
-end)
 
 RegisterNetEvent('bcc-water:CureSickness', function()
     if IsSick then
         IsSick = false
         ClearPedTasks(PlayerPedId())
         Core.NotifyRightTip(_U('feelingBetter'), 4000)
-        TriggerServerEvent('bcc-water:UpdateSickness', 0)
+
+        TriggerServerEvent('bcc-water:UpdateSickness', false)
+        DebugPrint('Trigger server event to update sickness status to false.')
     end
 end)
 
@@ -423,20 +412,15 @@ function PlayerStats(isWild)
     local appUpdate = {
         [1] = function() TriggerEvent('vorpmetabolism:changeValue', 'Thirst', thirst * 10) end,
         [2] = function() TriggerEvent('fred:consume', 0, thirst, 0, 0.0, 0.0, 0, 0.0, 0.0) end,
-        [3] = function() local data = {AddThirst = thirst} exports.outsider_needs:SetNeedsData(data) end,
+        [3] = function() local data = { AddThirst = thirst } exports.outsider_needs:SetNeedsData(data) end,
         [4] = function() TriggerEvent('fred_meta:consume', 0, thirst, 0, 0.0, 0.0, 0, 0.0, 0.0) end,
-        [5] = function() exports.fred_metabolism:consume('thirst' , thirst) end,
-        [6] = function() TriggerEvent('rsd_metabolism:SetMeta', {drink = thirst}) end,
+        [5] = function() exports.fred_metabolism:consume('thirst', thirst) end,
+        [6] = function() TriggerEvent('rsd_metabolism:SetMeta', { drink = thirst }) end,
         [7] = function() TriggerServerEvent('hud.decrease', 'thirst', thirst * 10) end,
         [8] = function() TriggerEvent('hud:client:changeValue', 'Thirst', thirst) end,
         [9] = function() exports['fx-hud']:setStatus('thirst', thirst) end,
         [10] = function() local ClientAPI = exports['mega_metabolism']:api() ClientAPI.addMeta('water', thirst) end,
-        [11] = function() 
-            exports['POS-Metabolism']:UpdateMultipleStatus({
-                ["water"] = thirst,
-                ["piss"] = thirst* 0.5
-            })
-        end,
+        [11] = function() exports['POS-Metabolism']:UpdateMultipleStatus({ ["water"] = thirst, ["piss"] = thirst * 0.5 }) end,
     }
 
     local function updateAttribute(attributeIndex, value, maxValue)
