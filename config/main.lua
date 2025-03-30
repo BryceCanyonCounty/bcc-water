@@ -51,12 +51,12 @@ Config = {
 
     -- Manage Activities in Rivers and Lakes (Wild Waters)
     wild = {
-        active  = true,    -- Enable the Use of Wild Waters
-        canteen = true,    -- Allow to Fill Canteen
-        bucket  = true,    -- Allow to Fill Bucket
-        bottle  = true,    -- Allow to Fill Bottle
-        wash    = true,    -- Allow Player to Wash
-        drink   = true,    -- Allow Player to Drink
+        active  = true,       -- Enable the Use of Wild Waters
+        canteen = true,       -- Allow to Fill Canteen
+        bucket  = true,       -- Allow to Fill Bucket
+        bottle  = true,       -- Allow to Fill Bottle
+        wash    = true,       -- Allow Player to Wash
+        drink   = true,       -- Allow Player to Drink
         multi   = {
             bottles = true,   -- Allow to Fill Multiple Bottles at Once
             bottleAmount = 5, -- Maximum Amount of Bottles to Fill at Once
@@ -64,22 +64,27 @@ Config = {
             bucketAmount = 5  -- Maximum Amount of Buckets to Fill at Once
         }
     },
+    ---------------------------------------------------------------
 
-    -- Chance to Get Sick by Drinking from Wild Waters
-    sicknessChance = 25, -- Range 1 - 100 (lower number = lower chance) / Set to 0 to Disable
-
+    -- Sickness from Drinking Wild Water (Player Dies if Duration or Health Reaches 0)
+    sickness = {
+        chance   = 25,  -- Range 1 - 100 (lower Number = lower Chance) / Set to 0 to Disable
+        duration = 600, -- Default: 600 / Death Timer in Seconds 
+        interval = 15,  -- Default: 15 / Time in Seconds Between each Health Loss
+        health   = 50,  -- Default: 50 / Health lost per Interval
+    },
     ---------------------------------------------------------------
 
     -- Item Names from Database
-    canteen     = 'canteen',
+    canteen      = 'canteen',
 
-    emptyBucket = 'wateringcan_empty',
-    cleanBucket = 'wateringcan',
-	dirtyBucket = 'wateringcan_dirtywater',
+    emptyBucket  = 'wateringcan_empty',
+    cleanBucket  = 'wateringcan',
+    dirtyBucket  = 'wateringcan_dirtywater',
 
-    emptyBottle = 'bcc_empty_bottle',
-    cleanBottle = 'bcc_clean_bottle',
-	dirtyBottle = 'bcc_dirty_bottle',
+    emptyBottle  = 'bcc_empty_bottle',
+    cleanBottle  = 'bcc_clean_bottle',
+    dirtyBottle  = 'bcc_dirty_bottle',
 
     antidoteItem = 'antidote', -- Item name that cures sickness
     ---------------------------------------------------------------
@@ -91,8 +96,8 @@ Config = {
 
     -- Register Items as Useable
     useable = {
-        cleanBottle = true,
-        dirtyBottle = true,
+        cleanBottle  = true,
+        dirtyBottle  = true,
         antidoteItem = true,
     },
     ---------------------------------------------------------------
