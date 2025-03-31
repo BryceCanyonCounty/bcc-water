@@ -113,7 +113,7 @@ local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage
             local animDict = 'amb_work@prop_human_pump_water@female_b@idle_a'
             local animName = 'idle_a'
             if IsPedMale(playerPed) then
-                animDict = 'amb_work@prop_human_pump_water@male_b@idle_a'
+                animDict = 'amb_work@prop_human_pump_water@male_a@idle_a'
             end
             PlayAnim(animDict, animName, 1, 10000)
         end
@@ -178,7 +178,7 @@ function BucketFill(pumpAnim)
             local animDict = 'amb_work@prop_human_pump_water@female_b@idle_a'
             local animName = 'idle_a'
             if IsPedMale(playerPed) then
-                animDict = 'amb_work@prop_human_pump_water@male_b@idle_a'
+                animDict = 'amb_work@prop_human_pump_water@male_a@idle_a'
             end
             PlayAnim(animDict, animName, 1, 10000)
         end
