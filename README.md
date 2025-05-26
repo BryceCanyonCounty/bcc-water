@@ -24,6 +24,7 @@
 
 ## Supported Metabolism Scripts
 
+-   BLN HUD
 -   VORP Metabolism
 -   Fred Metabolism
 -   Outsider Needs Metabolism
