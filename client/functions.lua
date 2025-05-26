@@ -318,6 +318,10 @@ function WashPlayer(animType)
         exports['POS-Metabolism']:ShowerEvent()
     end
 
+    if tonumber(Config.app) == 12 then
+        exports.bln_hud:PlayerWash()
+    end
+
     DebugPrint('Player washed successfully.')
 end
 
@@ -421,6 +425,7 @@ function PlayerStats(isWild)
         [9] = function() exports['fx-hud']:setStatus('thirst', thirst) end,
         [10] = function() local ClientAPI = exports['mega_metabolism']:api() ClientAPI.addMeta('water', thirst) end,
         [11] = function() exports['POS-Metabolism']:UpdateMultipleStatus({ ["water"] = thirst, ["piss"] = thirst * 0.5 }) end,
+        [12] = function() exports.bln_hud:SetThirst(thirst)
     }
 
     local function updateAttribute(attributeIndex, value, maxValue)
