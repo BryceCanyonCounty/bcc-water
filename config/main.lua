@@ -20,6 +20,7 @@ Config = {
     -- FX-HUD                       = 9
     -- Mega Metabolism              = 10
     -- POS-Metabolism Paid          = 11
+    -- BLN HUD                      = 12
     app = 1,
     ---------------------------------------------------------------
 
