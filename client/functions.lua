@@ -425,7 +425,7 @@ function PlayerStats(isWild)
         [9] = function() exports['fx-hud']:setStatus('thirst', thirst) end,
         [10] = function() local ClientAPI = exports['mega_metabolism']:api() ClientAPI.addMeta('water', thirst) end,
         [11] = function() exports['POS-Metabolism']:UpdateMultipleStatus({ ["water"] = thirst, ["piss"] = thirst * 0.5 }) end,
-        [12] = function() exports.bln_hud:SetThirst(thirst) end,
+        [12] = function() exports.bln_hud:AddThirst(thirst) end,
     }
 
     local function updateAttribute(attributeIndex, value, maxValue)
