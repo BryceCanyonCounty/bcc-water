@@ -22,4 +22,4 @@ server_scripts {
 	'server/main.lua'
 }
 
-version '2.1.6'
+version '2.1.7'
