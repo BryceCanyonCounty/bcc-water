@@ -1,23 +1,17 @@
-Core = exports.vorp_core:GetCore()
--- Prompts
+local Core = exports.vorp_core:GetCore()
+
+---@type BCCWaterDebugLib
+local DBG = BCCWaterDebug
+
 local Prompts = {}
 local PumpGroup = GetRandomIntInRange(0, 0xffffff)
 local WaterGroup = GetRandomIntInRange(0, 0xffffff)
--- Water
 Filling = false
 PlayerCoords = vector3(0, 0, 0)
-DevModeActive = Config.devMode.active
-
-
-function DebugPrint(message)
-    if DevModeActive then
-        print('^1[DEV MODE] ^4' .. message)
-    end
-end
 
 -- Create and start prompts
 local function CreatePrompt(keyCode, textKey, groups)
-    DebugPrint('Creating prompt with keyCode: ' .. keyCode .. ', textKey: ' .. textKey)
+    DBG.Info(string.format('Creating prompt with keyCode: %s, textKey: %s', tostring(keyCode), tostring(textKey)))
     local prompt = UiPromptRegisterBegin()
     UiPromptSetControlAction(prompt, keyCode)
     UiPromptSetText(prompt, CreateVarString(10, 'LITERAL_STRING', _U(textKey)))
@@ -27,18 +21,18 @@ local function CreatePrompt(keyCode, textKey, groups)
         UiPromptSetGroup(prompt, group, 0)
     end
     UiPromptRegisterEnd(prompt)
-    DebugPrint('Prompt created successfully.')
+    DBG.Info('Prompt created successfully.')
     return prompt
 end
 
 local function StartPrompts()
-    DebugPrint('Starting prompts...')
+    DBG.Info('Starting prompts...')
     Prompts.FillCanteenPrompt = CreatePrompt(Config.keys.fillCanteen.code, 'fillCanteen', { WaterGroup, PumpGroup })
     Prompts.FillBucketPrompt = CreatePrompt(Config.keys.fillBucket.code, 'fillBucket', { WaterGroup, PumpGroup })
     Prompts.FillBottlePrompt = CreatePrompt(Config.keys.fillBottle.code, 'fillBottle', { WaterGroup, PumpGroup })
     Prompts.WashPrompt = CreatePrompt(Config.keys.wash.code, 'wash', { WaterGroup, PumpGroup })
     Prompts.DrinkPrompt = CreatePrompt(Config.keys.drink.code, 'drink', { WaterGroup, PumpGroup })
-    DebugPrint('Prompts started successfully.')
+    DBG.Info('Prompts started successfully.')
 end
 
 -- Create prompt text on-screen when not using prompt buttons
@@ -53,7 +47,7 @@ end
 ---@param itemType string
 ---@param pump boolean
 local function ManageItems(itemType, pump)
-    DebugPrint('ManageItems function called with itemType: ' .. itemType .. ', pump: ' .. tostring(pump))
+    DBG.Info(string.format('ManageItems function called with itemType: %s, pump: %s', tostring(itemType), tostring(pump)))
 
     local config = pump and Config.pump or Config.wild
 
@@ -81,25 +75,25 @@ end
 
 -- Start main functions when character is selected
 RegisterNetEvent('vorp:SelectedCharacter', function()
-    DebugPrint('Character selected, starting main functions...')
+    DBG.Info('Character selected, starting main functions...')
 
     StartPrompts()
     PlayerLocation()
 
     if Config.pump.active then
-        DebugPrint('Triggering PumpWater event.')
+        DBG.Info('Triggering PumpWater event.')
         TriggerEvent('bcc-water:PumpWater')
     end
 
     if Config.wild.active then
-        DebugPrint('Triggering WildWater event.')
+        DBG.Info('Triggering WildWater event.')
         TriggerEvent('bcc-water:WildWater')
     end
 
-    DebugPrint('Checking server for player sickness.')
+    DBG.Info('Checking server for player sickness.')
     local isSick = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
     if isSick then
-        DebugPrint('Waiting to apply sickness effect...')
+        DBG.Info('Waiting to apply sickness effect...')
         Wait(30000)
         ApplySicknessEffect()
     end
@@ -109,22 +103,22 @@ end)
 CreateThread(function()
     if Config.devMode.active then
         RegisterCommand(Config.devMode.command, function()
-            DebugPrint('Restarting main functions for development...')
+            DBG.Info('Restarting main functions for development...')
 
             StartPrompts()
             PlayerLocation()
 
             if Config.pump.active then
-                DebugPrint('Triggering PumpWater event for development.')
+                DBG.Info('Triggering PumpWater event for development.')
                 TriggerEvent('bcc-water:PumpWater')
             end
 
             if Config.wild.active then
-                DebugPrint('Triggering WildWater event for development.')
+                DBG.Info('Triggering WildWater event for development.')
                 TriggerEvent('bcc-water:WildWater')
             end
 
-            DebugPrint('Checking server for player sickness.')
+            DBG.Info('Checking server for player sickness.')
             local isSick = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
             if isSick then
                 ApplySicknessEffect()
@@ -186,7 +180,7 @@ local function HandleWaterInteraction(configType, promptGroup, actions, promptNa
                         else
                             action.func()
                         end
-                        DebugPrint('Action performed: ' .. action.fullKey)
+                        DBG.Info(string.format('Action performed: %s', tostring(action.fullKey)))
                     else
                         Filling = false
                         goto END
@@ -201,7 +195,7 @@ local function HandleWaterInteraction(configType, promptGroup, actions, promptNa
 end
 
 AddEventHandler('bcc-water:PumpWater', function()
-    DebugPrint('PumpWater event triggered.')
+    DBG.Info('PumpWater event triggered.')
 
     local pumpActions = {
         {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = {true}, fullKey = 'fillCanteen', offset = 0.2},
@@ -228,7 +222,7 @@ AddEventHandler('bcc-water:PumpWater', function()
 end)
 
 AddEventHandler('bcc-water:WildWater', function()
-    DebugPrint('WildWater event triggered.')
+    DBG.Info('WildWater event triggered.')
 
     local wildActions = {
         {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = {false}, fullKey = 'fillCanteen', offset = 0.2},
@@ -266,7 +260,7 @@ end)
 AddEventHandler('onResourceStop', function(resourceName)
     if (GetCurrentResourceName() ~= resourceName) then return end
 
-    DebugPrint('Resource stopped, cleaning up...')
+    DBG.Info('Resource stopped, cleaning up...')
     ClearPedTasksImmediately(PlayerPedId())
 
     if Canteen then
@@ -285,5 +279,5 @@ AddEventHandler('onResourceStop', function(resourceName)
         UiPromptDelete(prompt)
         Prompts[name] = nil
     end
-    DebugPrint('Cleanup complete.')
+    DBG.Info('Cleanup complete.')
 end)
