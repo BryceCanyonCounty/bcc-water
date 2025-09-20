@@ -1,7 +1,9 @@
-local _strblob = string.blob or function(length)
+local _strblob = function(length)
     return string.rep('\0', math.max(40 + 1, length))
 end
 
+---@class DataView
+---@type table
 DataView = {
     EndBig = '>',
     EndLittle = '<',
@@ -36,7 +38,7 @@ local function _ib(o, l, t) return ((t.size < 0 and true) or (o + (t.size - 1) <
 local function _ef(big) return (big and DataView.EndBig) or DataView.EndLittle end
 
 --[[ Helper function for setting fixed datatypes within a buffer --]]
-local SetFixed = nil
+SetFixed = nil
 
 --[[ Create an ArrayBuffer with a size in bytes --]]
 function DataView.ArrayBuffer(length)
@@ -86,7 +88,7 @@ for label, datatype in pairs(DataView.Types) do
     -- Ensure cache is correct.
     if datatype.size >= 0 and string.packsize(datatype.code) ~= datatype.size then
         local msg = 'Pack size of %s (%d) does not match cached length: (%d)'
-        error(msg:format(label, string.packsize(fmt[#fmt]), datatype.size))
+        error(msg:format(label, string.packsize(datatype.code), datatype.size))
         return nil
     end
 end
