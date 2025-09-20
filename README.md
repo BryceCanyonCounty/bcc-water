@@ -37,14 +37,29 @@
 
 ## Installation
 
-1. **Add Script to Resources**: Place the `bcc-water` folder in your resources directory.
-2. **Update `server.cfg`**: Add `ensure bcc-water` to your `server.cfg` file.
-3. **Script Load Order**: Ensure this script is loaded after your metabolism script and other dependencies.
-4. **Database Setup**: Run the included `water.sql` file to add necessary items to your database.
-5. **Image Integration**: Copy images from the `img` folder to `...\vorp_inventory\html\img\items`.
-6. **Store/Crafting Setup**: Add items to a store or crafting station for player access.
-7. **Configuration**: Set your metabolism script in the `config/main.lua` file.
-8. **Restart Server**: Restart your server to apply the changes.
+- **Add Script to Resources**: Place the `bcc-water` folder in your resources directory.
+
+- **Update `server.cfg`**: Add `ensure bcc-water` to your `server.cfg` file.
+
+- **Script Load Order**: Ensure this script is loaded after your metabolism script and other dependencies.
+
+- **Database Setup**: The resource includes a Lua seeder at `server/database.lua` which automatically seeds the required `items` rows on resource start (configurable). This replaces the old `water.sql` file.
+
+  - To auto-seed on resource start, ensure `autoSeedDatabase = true` in `shared/configs/main.lua`.
+
+  - To force a manual seed from the server console, run the command: `bcc-water:seed`.
+
+  Verify seeded items
+
+  - A console-only command `bcc-water:verify` is available to check the `items` table for the required items and report any missing entries.
+
+- **Image Integration**: Copy images from the `img` folder to `...\vorp_inventory\html\img\items`.
+
+- **Store/Crafting Setup**: Add items to a store or crafting station for player access.
+
+- **Configuration**: Set your metabolism script in the `config/main.lua` file.
+
+- **Restart Server**: Restart your server to apply the changes.
 
 ## Inspiration
 
