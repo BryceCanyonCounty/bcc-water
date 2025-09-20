@@ -1,3 +1,8 @@
+<2.2.0>
+- Added support for SS-Metabolism
+- Updated debug system
+- Automated database function
+
 <2.1.7>
 - Fix "thirst update" for BLN HUD
 
