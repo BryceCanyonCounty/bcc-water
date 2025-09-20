@@ -1,8 +1,13 @@
+local Core = exports.vorp_core:GetCore()
+
+---@type BCCWaterDebugLib
+local DBG = BCCWaterDebug
+
 local CanUseCanteen = true
 local IsSick = false
 
 local function LoadAnim(animDict)
-    DebugPrint('Loading animation dictionary: ' .. animDict)
+    DBG.Info(string.format('Loading animation dictionary: %s', tostring(animDict)))
     if HasAnimDictLoaded(animDict) then return end
 
     RequestAnimDict(animDict)
@@ -16,11 +21,11 @@ local function LoadAnim(animDict)
         end
         Wait(10)
     end
-    DebugPrint('Animation dictionary loaded: ' .. animDict)
+    DBG.Info(string.format('Animation dictionary loaded: %s', tostring(animDict)))
 end
 
 local function PlayAnim(animDict, animName, flagValue, waitTime)
-    DebugPrint('Playing animation: ' .. animName .. ' from dictionary: ' .. animDict)
+    DBG.Info(string.format('Playing animation: %s from dictionary: %s', tostring(animName), tostring(animDict)))
     local playerPed = PlayerPedId()
     local flag = flagValue or 1
     local time = waitTime or 5000
@@ -33,13 +38,13 @@ local function PlayAnim(animDict, animName, flagValue, waitTime)
     ClearPedTasks(playerPed)
 
     Filling = false
-    DebugPrint('Animation played successfully.')
+    DBG.Info('Animation played successfully.')
 end
 
 local function LoadModel(model, modelName)
-    DebugPrint('Loading model: ' .. modelName)
+    DBG.Info(string.format('Loading model: %s', tostring(modelName)))
     if not IsModelValid(model) then
-        print('Invalid model:', modelName)
+        print(string.format('Invalid model: %s', modelName))
         return
     end
 
@@ -56,11 +61,11 @@ local function LoadModel(model, modelName)
         end
         Wait(10)
     end
-    DebugPrint('Model loaded: ' .. modelName)
+    DBG.Info(string.format('Model loaded: %s', tostring(modelName)))
 end
 
 local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage)
-    DebugPrint('Filling container with model: ' .. modelName)
+    DBG.Info(string.format('Filling container with model: %s', tostring(modelName)))
     Filling = true
     local playerPed = PlayerPedId()
     HidePedWeapons(playerPed, 2, true)
@@ -73,7 +78,7 @@ local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage
         SetEntityVisible(Container, true)
         SetEntityAlpha(Container, 255, false)
         SetModelAsNoLongerNeeded(modelHash)
-        AttachEntityToEntity(Container, playerPed, boneIndex, 0.12, 0.00, -0.10, 306.0, 18.0, 0.0, true, true, false, true, 2, true)
+        AttachEntityToEntity(Container, playerPed, boneIndex, 0.12, 0.00, -0.10, 306.0, 18.0, 0.0, true, true, false, true, 2, true, false, false)
 
         local animDict = 'amb_work@world_human_crouch_inspect@male_c@idle_a'
         local animName = 'idle_a'
@@ -125,21 +130,21 @@ local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage
     if Config.showMessages then
         Core.NotifyRightTip(notificationMessage, 4000)
     end
-    DebugPrint('Container filled successfully.')
+    DBG.Info('Container filled successfully.')
 end
 
 function CanteenFill(pumpAnim)
-    DebugPrint('Filling canteen.')
+    DBG.Info('Filling canteen.')
     FillContainer(pumpAnim, 'p_cs_canteen_hercule', joaat('p_cs_canteen_hercule'), _U('fillingComplete'))
 end
 
 function BottleFill(pumpAnim)
-    DebugPrint('Filling bottle.')
+    DBG.Info('Filling bottle.')
     FillContainer(pumpAnim, 'p_bottlebeer01a_2', joaat('p_bottlebeer01a_2'), _U('fillingComplete'))
 end
 
 function BucketFill(pumpAnim)
-    DebugPrint('Filling bucket.')
+    DBG.Info('Filling bucket.')
     Filling = true
     local playerPed = PlayerPedId()
     HidePedWeapons(playerPed, 2, true)
@@ -188,11 +193,11 @@ function BucketFill(pumpAnim)
     if Config.showMessages then
         Core.NotifyRightTip(_U('fillingComplete'), 4000)
     end
-    DebugPrint('Bucket filled successfully.')
+    DBG.Info('Bucket filled successfully.')
 end
 
 RegisterNetEvent('bcc-water:UseCanteen', function()
-    DebugPrint('Using canteen.')
+    DBG.Info('Using canteen.')
     if CanUseCanteen then
         local result = Core.Callback.TriggerAwait('bcc-water:UpdateCanteen')
         if not result then return end
@@ -205,7 +210,7 @@ RegisterNetEvent('bcc-water:UseCanteen', function()
 end)
 
 function DrinkCanteen()
-    DebugPrint('Drinking from canteen.')
+    DBG.Info('Drinking from canteen.')
     local playerPed = PlayerPedId()
     HidePedWeapons(playerPed, 2, true)
 
@@ -231,7 +236,7 @@ function DrinkCanteen()
 end
 
 function WildDrink()
-    DebugPrint('Drinking from wild water.')
+    DBG.Info('Drinking from wild water.')
     PlayAnim('amb_rest_drunk@world_human_bucket_drink@ground@male_a@idle_c', 'idle_h', 1, 10000)
     PlayerStats(true)
     local sicknessChance = Config.sickness.chance
@@ -243,7 +248,7 @@ function WildDrink()
 end
 
 RegisterNetEvent('bcc-water:DrinkBottle', function(wild)
-    DebugPrint('Drinking from bottle. Wild: ' .. tostring(wild))
+    DBG.Info(string.format('Drinking from bottle. Wild: %s', tostring(wild)))
     local playerPed = PlayerPedId()
     HidePedWeapons(playerPed, 2, true)
 
@@ -261,7 +266,7 @@ RegisterNetEvent('bcc-water:DrinkBottle', function(wild)
     SetModelAsNoLongerNeeded(modelHash)
 
     TaskPlayAnim(playerPed, animDict, animName, 1.0, 1.0, 5000, 31, 0.0, false, false, false)
-    AttachEntityToEntity(Bottle, playerPed, boneIndex, 0.05, 0.0, 0.05, 15.0, 175.0, 0.0, true, true, false, true, 1, true)
+    AttachEntityToEntity(Bottle, playerPed, boneIndex, 0.05, 0.0, 0.05, 15.0, 175.0, 0.0, true, true, false, true, 1, true, false, false)
     Wait(5500)
     DeleteObject(Bottle)
     ClearPedTasks(playerPed)
@@ -276,7 +281,7 @@ RegisterNetEvent('bcc-water:DrinkBottle', function(wild)
 end)
 
 function PumpDrink()
-    DebugPrint('Drinking from pump water.')
+    DBG.Info('Drinking from pump water.')
     local animDict = 'amb_work@prop_human_pump_water@female_b@idle_c'
     local animName = 'idle_g'
     if IsPedMale(PlayerPedId()) then
@@ -288,7 +293,7 @@ function PumpDrink()
 end
 
 function WashPlayer(animType)
-    DebugPrint('Washing player with animation type: ' .. animType)
+    DBG.Info(string.format('Washing player with animation type: %s', tostring(animType)))
     local playerPed = PlayerPedId()
 
     local animDict = ''
@@ -322,17 +327,17 @@ function WashPlayer(animType)
         exports.bln_hud:PlayerWash()
     end
 
-    DebugPrint('Player washed successfully.')
+    DBG.Info('Player washed successfully.')
 end
 
 function ApplySicknessEffect()
     if IsSick then
-        DebugPrint('Sickness effect already active, skipping.')
+        DBG.Info('Sickness effect already active, skipping.')
         return
     end
 
     TriggerServerEvent('bcc-water:UpdateSickness', true)
-    DebugPrint('Trigger server event to update sickness status to true.')
+    DBG.Info('Trigger server event to update sickness status to true.')
 
     IsSick = true
     local duration = Config.sickness.duration
@@ -340,40 +345,40 @@ function ApplySicknessEffect()
     local healthPerTick = Config.sickness.health
     local remaining = duration
 
-    DebugPrint('Sickness effect applied.')
+    DBG.Info('Sickness effect applied.')
 
     Core.NotifyRightTip(_U('feelingSick'), 4000)
 
     -- Animation + Health Tick Thread
     CreateThread(function()
-        DebugPrint('Starting sickness animation/health tick thread.')
+        DBG.Info('Starting sickness animation/health tick thread.')
         local playerPed = PlayerPedId()
 
         while IsSick and remaining > 0 do
             ClearPedTasks(playerPed)
-            DebugPrint('Cleared playerPed tasks for sickness animation.')
+            DBG.Info('Cleared playerPed tasks for sickness animation.')
 
             local currentHealth = GetEntityHealth(playerPed)
             local newHealth = currentHealth - healthPerTick
 
             -- Play animation
             if (remaining > (duration / 2)) and (currentHealth > 200) then
-                DebugPrint('Playing coughing animation.')
+                DBG.Info('Playing coughing animation.')
                 PlayAnim('amb_wander@code_human_coughing_hacking@male_a@wip_base', 'wip_base', 1, 5000)
             else
                 local vomit = math.random(1, 2) == 1 and 'idle_g' or 'idle_h'
-                DebugPrint('Playing vomiting animation: ' .. vomit)
+                DBG.Info(string.format('Playing vomiting animation: %s', vomit))
                 PlayAnim('amb_misc@world_human_vomit@male_a@idle_c', vomit, 1, 5000)
             end
 
             -- Apply health damage
             if newHealth <= 0 then
-                DebugPrint('Player health reached 0 during sickness. Killing player.')
-                SetEntityHealth(playerPed, 0)
+                DBG.Info('Player health reached 0 during sickness. Killing player.')
+                SetEntityHealth(playerPed, 0, 0)
                 break
             else
-                SetEntityHealth(playerPed, newHealth)
-                DebugPrint('Health reduced by sickness. New health: ' .. newHealth)
+                SetEntityHealth(playerPed, newHealth, 0)
+                DBG.Info(string.format('Health reduced by sickness. New health: %d', newHealth))
             end
 
             Wait(tickInterval * 1000)
@@ -381,15 +386,15 @@ function ApplySicknessEffect()
         end
 
         if IsSick then
-            DebugPrint('Sickness ended. Forcing death if still alive.')
+            DBG.Info('Sickness ended. Forcing death if still alive.')
             Core.NotifyRightTip(_U('succumbed'), 6000)
 
-            SetEntityHealth(playerPed, 0)
+            SetEntityHealth(playerPed, 0, 0)
             IsSick = false
             ClearPedTasks(playerPed)
 
             TriggerServerEvent('bcc-water:UpdateSickness', false)
-            DebugPrint('Sickness effect fully cleared.')
+            DBG.Info('Sickness effect fully cleared.')
         end
     end)
 end
@@ -401,12 +406,12 @@ RegisterNetEvent('bcc-water:CureSickness', function()
         Core.NotifyRightTip(_U('feelingBetter'), 4000)
 
         TriggerServerEvent('bcc-water:UpdateSickness', false)
-        DebugPrint('Trigger server event to update sickness status to false.')
+        DBG.Info('Trigger server event to update sickness status to false.')
     end
 end)
 
 function PlayerStats(isWild)
-    DebugPrint('Updating player stats.')
+    DBG.Info('Updating player stats.')
     local playerPed = PlayerPedId()
     local health = GetAttributeCoreValue(playerPed, 0, Citizen.ResultAsInteger())
     local stamina = GetAttributeCoreValue(playerPed, 1, Citizen.ResultAsInteger())
@@ -426,6 +431,7 @@ function PlayerStats(isWild)
         [10] = function() local ClientAPI = exports['mega_metabolism']:api() ClientAPI.addMeta('water', thirst) end,
         [11] = function() exports['POS-Metabolism']:UpdateMultipleStatus({ ["water"] = thirst, ["piss"] = thirst * 0.5 }) end,
         [12] = function() exports.bln_hud:AddThirst(thirst) end,
+        [13] = function() exports['SS-Metabolism']:RemoveThirsty(thirst) end,
     }
 
     local function updateAttribute(attributeIndex, value, maxValue)
@@ -451,7 +457,7 @@ function PlayerStats(isWild)
 
         PlaySoundFrontend('Core_Fill_Up', 'Consumption_Sounds', true, 0)
     else
-        DebugPrint('Check Config.app setting for correct metabolism value')
+        DBG.Error('Check Config.app setting for correct metabolism value')
     end
-    DebugPrint('Player stats updated successfully.')
+    DBG.Info('Player stats updated successfully.')
 end
