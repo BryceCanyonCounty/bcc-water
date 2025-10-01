@@ -432,6 +432,13 @@ function PlayerStats(isWild)
         [11] = function() exports['POS-Metabolism']:UpdateMultipleStatus({ ["water"] = thirst, ["piss"] = thirst * 0.5 }) end,
         [12] = function() exports.bln_hud:AddThirst(thirst) end,
         [13] = function() exports['SS-Metabolism']:RemoveThirsty(thirst) end,
+        [14] = function()
+            local thirstDelta = tonumber(thirst) or 0
+            if thirstDelta > 0 and thirstDelta <= 10 and thirstDelta == math.floor(thirstDelta) then
+                thirstDelta = thirstDelta * 10
+            end
+            exports['bcc-corehud']:AddNeed('thirst', thirstDelta)
+        end,
     }
 
     local function updateAttribute(attributeIndex, value, maxValue)
