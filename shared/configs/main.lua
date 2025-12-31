@@ -23,6 +23,7 @@ Config = {
     -- BLN HUD                      = 12
     -- SS-Metabolism                = 13
     -- bcc-corehud                  = 14
+    -- cas-metabolism               = 15
     app = 1,
     ---------------------------------------------------------------
 
