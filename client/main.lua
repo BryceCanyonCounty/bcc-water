@@ -141,7 +141,7 @@ local function HandleWaterInteraction(configType, promptGroup, actions, promptNa
         if Config.usePrompt then
             UiPromptSetActiveGroupThisFrame(promptGroup, CreateVarString(10, 'LITERAL_STRING', promptNameFunc()))
             for _, action in ipairs(actions) do
-                UiPromptSetVisible(Prompts[action.prompt], configType[action.configKey])
+                UiPromptSetVisible(Prompts[action.prompt], configType[action.configKey] == true)
             end
         else
             for _, action in ipairs(actions) do
