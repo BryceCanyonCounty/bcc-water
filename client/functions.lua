@@ -433,7 +433,7 @@ function PlayerStats(isWild)
         [8] = function() TriggerEvent('hud:client:changeValue', 'Thirst', thirst) end,
         [9] = function() exports['fx-hud']:setStatus('thirst', thirst) end,
         [10] = function() local ClientAPI = exports['mega_metabolism']:api() ClientAPI.addMeta('water', thirst) end,
-        [11] = function() exports['POS-Metabolism']:UpdateMultipleStatus({ ["water"] = thirst, ["piss"] = thirst * 0.5 }) end,
+        [11] = function() exports['POS-Metabolism']:UpdateMultipleStatus({ ['water'] = thirst, ['piss'] = thirst * 0.5 }) end,
         [12] = function() exports.bln_hud:AddThirst(thirst) end,
         [13] = function() exports['SS-Metabolism']:RemoveThirsty(thirst) end,
         [14] = function()
@@ -443,6 +443,7 @@ function PlayerStats(isWild)
             end
             exports['bcc-corehud']:AddNeed('thirst', thirstDelta)
         end,
+        [15] = function() exports['cas-metabolism']:addMetabolismValue('thirst', thirst) end,
     }
 
     local function updateAttribute(attributeIndex, value, maxValue)
