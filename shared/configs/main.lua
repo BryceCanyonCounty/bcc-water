@@ -94,6 +94,10 @@ Config = {
     dirtyBottle  = 'bcc_dirty_bottle',
 
     antidoteItem = 'antidote', -- Item name that cures sickness
+
+    -- Soap Item Configuration
+    soapItem = 'bcc_soap_bar', -- Item name for soap
+    requireSoap = false,       -- Set to true to require soap for washing
     ---------------------------------------------------------------
 
     durability = {
@@ -106,6 +110,7 @@ Config = {
         cleanBottle  = true,
         dirtyBottle  = true,
         antidoteItem = true,
+        soapItem     = true,
     },
     ---------------------------------------------------------------
 
