@@ -296,6 +296,29 @@ function WashPlayer(animType)
     DBG.Info(string.format('Washing player with animation type: %s', tostring(animType)))
     local playerPed = PlayerPedId()
 
+    -- Check for soap requirement
+    if Config.requireSoap then
+        local hasSoap = Core.Callback.TriggerAwait('bcc-water:CheckItem', Config.soapItem)
+        if not hasSoap then
+            if Config.showMessages then
+                Core.NotifyRightTip(_U('noSoap'), 4000)
+            end
+            DBG.Info('Player does not have required soap item.')
+            return
+        end
+
+        -- Remove soap item
+        local soapRemoved = Core.Callback.TriggerAwait('bcc-water:RemoveItem', Config.soapItem, 1)
+        if not soapRemoved then
+            if Config.showMessages then
+                Core.NotifyRightTip(_U('failedToUseSoap'), 4000)
+            end
+            DBG.Info('Failed to remove soap item.')
+            return
+        end
+        DBG.Info('Soap item consumed for washing.')
+    end
+
     local animDict = ''
     local animName = 'idle_l'
 
