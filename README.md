@@ -1,6 +1,6 @@
 # bcc-water
 
-**bcc-water** is a comprehensive script for managing water interactions in a RedM. It allows players to carry, drink, and refill a canteen, as well as interact with various water sources. This script integrates seamlessly with multiple metabolism systems and enhances the player experience by adding realistic water-related activities.
+**bcc-water** is a comprehensive script for managing water interactions in RedM. It allows players to carry, drink, and refill a canteen, fill buckets and water bottles, as well as interact with various water sources. This script integrates seamlessly with multiple metabolism systems and enhances the player experience by adding realistic water-related activities.
 
 ## Features
 
@@ -30,10 +30,13 @@
 - RSD Metabolism
 - NXT Metabolism
 - Andrade Metabolism
-- FX-HUD
+- FX HUD
 - Mega Metabolism
-- POS-Metabolism
+- POS Metabolism
 - BLN HUD
+- SS Metabolism
+- BCC CoreHud
+- CAS Metabolism
 
 ## Installation
 
