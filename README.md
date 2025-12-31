@@ -11,7 +11,7 @@
   - Refill canteens, buckets and bottles at water pumps, sinks, rivers, and lakes.
   - Drink directly from natural water sources to preserve canteen water.
 - **Health and Stamina Configurations**: Separate settings for drinking from canteens and wild waters.
-- **Hygiene Options**: Players can wash in rivers, lakes, and at water pumps or sinks.
+- **Hygiene Options**: Players can wash in rivers, lakes, and at water pumps or sinks (soap item optional).
 - **Risk Factor**: Players may get sick and perish after drinking wild water (even from a bottle).
 - **Utility**: Fill water buckets and bottles for use in other scripts.
 
