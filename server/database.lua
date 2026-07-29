@@ -1,4 +1,4 @@
-local SEED_VERSION = 2
+local SEED_VERSION = 3
 
 local ITEMS = {
     { 'canteen', 'Canteen', 1, 1, 'item_standard', 1, 'A portable container to carry water.' },
@@ -9,6 +9,7 @@ local ITEMS = {
     { 'bcc_clean_bottle', 'Clean Water Bottle', 15, 1, 'item_standard', 1, 'A bottle filled with clean water.' },
     { 'bcc_dirty_bottle', 'Dirty Water Bottle', 15, 1, 'item_standard', 1, 'A bottle filled with dirty water.' },
     { 'antidote', 'Antidote', 5, 1, 'item_standard', 1, 'A remedy to cure sickness.' },
+    { 'purification_tablet', 'Purification Tablet', 20, 1, 'item_standard', 0, 'Purifies one container of dirty water.' },
     { 'bcc_soap_bar', 'Soap Bar', 10, 1, 'item_standard', 1, 'A bar of soap for washing.' },
 }
 
