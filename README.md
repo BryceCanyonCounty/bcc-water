@@ -13,7 +13,54 @@
 - **Health and Stamina Configurations**: Separate settings for drinking from canteens and wild waters.
 - **Hygiene Options**: Players can wash in rivers, lakes, and at water pumps or sinks (soap item optional).
 - **Risk Factor**: Players may get sick and perish after drinking wild water (even from a bottle).
-- **Utility**: Fill water buckets and bottles for use in other scripts.
+- **Utility**: Manage water buckets and bottles for use in other scripts.
+
+### Consuming Buckets from Another Resource
+
+Existing bucket integrations remain compatible and can continue managing the
+filled and empty items themselves. To preserve the durability of the exact
+bucket being used, call the server export from the bucket's usable-item handler:
+
+```lua
+local replaced = exports['bcc-water']:ConsumeContainer(data, 'bucket')
+if not replaced then
+    return
+end
+
+-- Continue the bucket's effect here.
+```
+
+Each export call applies one bucket use and its configured durability loss.
+The filled bucket remains until its configured uses per fill reach zero, then
+it is replaced by its empty counterpart. On its final durability use the bucket
+breaks, so the export still returns `true` but no empty bucket is added. Do not
+also update, remove, or replace the bucket in the calling resource.
+
+Resources without usable-item callback data can use the simpler server export:
+
+```lua
+local consumed = exports['bcc-water']:ConsumeBucket(source)
+```
+
+It locates a configured clean or dirty bucket and applies one complete
+bcc-water-managed use.
+
+### Purifying Dirty Water
+
+Dirty bottles, buckets, and canteens receive a server-backed inventory context
+action for each enabled purification method. The default method consumes one
+`purification_tablet`.
+
+Purification changes only the water state. Container durability and canteen
+drinks remaining are preserved. A partial dirty canteen remains dirty when
+topped up with clean water and must still be purified.
+
+Additional reagent-based methods can be configured under
+`Config.purification.methods`, each with its own label and required items.
+
+Container capacity and server-side use cooldowns are configured together for
+canteens, buckets, and bottles under `Config.usesPerFill` and
+`Config.useCooldowns`. Cooldown values are milliseconds.
 
 ## Dependencies
 
