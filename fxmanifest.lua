@@ -14,15 +14,19 @@ shared_scripts {
 client_scripts {
     'client/client_init.lua',
 	'client/dataview.lua',
-    'client/main.lua',
     'client/functions.lua',
-    'client/menus/input.lua'
+    'client/menus/input.lua',
+    'client/main.lua'
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/server_init.lua',
     'server/database.lua',
+    'server/services/inventory.lua',
+    'server/services/containers.lua',
+    'server/services/sickness.lua',
+    'server/services/soap.lua',
 	'server/main.lua'
 }
 
