@@ -116,11 +116,13 @@ local function consumeContainerUnlocked(item, itemType)
     local newDurability = math.max(0, durability - durabilityUsage)
     local newUsesLeft = math.max(0, usesLeft - 1)
 
-    -- The use succeeds on the final use, but the worn-out container breaks
-    -- instead of being returned as an empty item.
     if durabilityUsage > 0 and newDurability < durabilityUsage then
         if not removeOneItemById(src, currentItem.id) then
             return false
+        end
+        if Config.showMessages then
+            local messageKey = itemType == 'bucket' and 'brokeBucket' or 'brokeBottle'
+            Core.NotifyRightTip(src, _U(messageKey), 4000)
         end
         DBG:Info(string.format('%s %d broke for source %d after use: durability %d%%',
             itemType, currentItem.id, src, newDurability))
@@ -154,8 +156,6 @@ local function consumeContainerUnlocked(item, itemType)
     metadata.usesLeft = nil
     setContainerDescription(metadata, itemType, 'empty')
     if not exports.vorp_inventory:canCarryItem(src, emptyItem, 1) then
-        -- This should only occur with custom inventory constraints: removing the
-        -- filled container normally makes room for its empty replacement.
         DBG:Error(string.format('Could not return empty %s to source %d', itemType, src))
         addInventoryItem(src, currentItem.name, currentItem.metadata)
         return false
@@ -170,7 +170,7 @@ local function consumeContainerUnlocked(item, itemType)
     return true
 end
 
-local function consumeContainer(item, itemType)
+local function consumeContainerData(item, itemType)
     local _, src, itemId = usableItemData(item)
     if not src or not itemId then
         return false
@@ -189,33 +189,53 @@ local function consumeContainer(item, itemType)
     return consumed
 end
 
--- External bucket consumers can opt into durability-safe replacement:
--- exports['bcc-water']:ConsumeContainer(data, 'bucket')
-exports('ConsumeContainer', consumeContainer)
-
----@param src number
+---@param playerSource number|string
+---@param itemType 'bucket'|'bottle'
+---@param itemId? number|string
 ---@return boolean
-local function consumeBucket(src)
-    src = tonumber(src)
+local function consumeContainer(playerSource, itemType, itemId)
+    local src = tonumber(playerSource)
     if not src or not Core.getUser(src) then
         return false
     end
 
-    local bucket = exports.vorp_inventory:getItem(src, Config.cleanBucket)
-        or exports.vorp_inventory:getItem(src, Config.dirtyBucket)
-    if not bucket then
+    if itemType ~= 'bucket' and itemType ~= 'bottle' then
+        DBG:Warning(string.format('Source %d requested invalid external container type: %s',
+            src, tostring(itemType)))
         return false
     end
 
-    return consumeContainer({
+    local container
+    local targetId = tonumber(itemId)
+    if itemId ~= nil and not targetId then
+        DBG:Warning(string.format('Source %d supplied invalid external container ID: %s',
+            src, tostring(itemId)))
+        return false
+    end
+
+    if targetId then
+        container = getItemInstance(src, targetId)
+    elseif itemType == 'bucket' then
+        container = exports.vorp_inventory:getItem(src, Config.cleanBucket)
+            or exports.vorp_inventory:getItem(src, Config.dirtyBucket)
+    else
+        container = exports.vorp_inventory:getItem(src, Config.cleanBottle)
+            or exports.vorp_inventory:getItem(src, Config.dirtyBottle)
+    end
+
+    if not container then
+        return false
+    end
+
+    return consumeContainerData({
         source = src,
-        item = bucket,
-    }, 'bucket')
+        item = container,
+    }, itemType)
 end
 
--- Preferred integration for external resources. bcc-water owns item names,
--- remaining uses, durability, breakage, and empty-container replacement.
-exports('ConsumeBucket', consumeBucket)
+-- Public server integration for buckets and bottles. bcc-water owns item names,
+-- uses, durability, breakage, and empty-container replacement.
+exports('ConsumeContainer', consumeContainer)
 
 ---@param src number
 ---@param canteenId number
@@ -511,7 +531,9 @@ local function useCanteen(data)
         if not removeOneItemById(src, canteen.id) then
             return false
         end
-        Core.NotifyRightTip(src, _U('brokeCanteen'), 4000)
+        if Config.showMessages then
+            Core.NotifyRightTip(src, _U('brokeCanteen'), 4000)
+        end
         DBG:Info(string.format('Canteen %d broke for source %d after use', canteen.id, src))
     else
         if not updateCanteenMetadata(src, canteen.id, newDrinksLeft, newDurability, metadata.waterType or 'clean') then
@@ -525,18 +547,17 @@ local function useCanteen(data)
     return true, metadata.waterType == 'dirty'
 end
 
--- Manage Filling a New or Empty Canteen
 Core.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb, pump)
     local src = source
     local user = Core.getUser(src)
-    -- Check if the user exists
+
     if not user then
         DBG:Error(string.format('User not found for source: %d', src))
         return cb(false)
     end
     local itemCanteen = Config.canteen
     local canteen = exports.vorp_inventory:getItem(src, itemCanteen)
-    -- Check if the canteen exists in the inventory
+
     if not canteen then
         Core.NotifyRightTip(src, _U('needCanteen'), 4000)
         DBG:Warning(string.format('Canteen not found for source: %d', src))
@@ -545,7 +566,7 @@ Core.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb, pump)
     local meta = canteen.metadata or {}
     local isNewCanteen = next(meta) == nil
     local waterType = (pump or not Config.wild.dirtyItems) and 'clean' or 'dirty'
-    -- Fill the canteen if it's new or not full
+
     if isNewCanteen then
         if not updateCanteenMetadata(src, canteen.id, MaxCanteenDrinks,
                 Config.durability.defaults.canteen, waterType) then
@@ -573,14 +594,13 @@ Core.Callback.Register('bcc-water:GetCanteenLevel', function(source, cb, pump)
     cb(true)
 end)
 
--- Check if Player has an Item and Update Inventory
 ---@param itemType string
 ---@param itemAmount number
 ---@param pump boolean
 Core.Callback.Register('bcc-water:GetItem', function(source, cb, itemType, itemAmount, pump)
     local src = source
     local user = Core.getUser(src)
-    -- Check if the user exists
+
     if not user then
         DBG:Error(string.format('User not found for source: %d', src))
         return cb(false)
@@ -611,16 +631,16 @@ Core.Callback.Register('bcc-water:GetItem', function(source, cb, itemType, itemA
         return cb(false)
     end
 
-    -- Set empty item and notifications based on item type
+
     local emptyItem = itemType == 'bucket' and Config.emptyBucket or Config.emptyBottle
     local notification = itemType == 'bucket' and _U('needBucket') or _U('needBottle')
-    -- Check if the player has the required item
     local item = exports.vorp_inventory:getItem(src, emptyItem)
     if not item or item.count < itemAmount then
         Core.NotifyRightTip(src, notification, 4000)
         DBG:Warning(string.format('Source %d does not have the required item: %s', src, emptyItem))
         return cb(false)
     end
+
     for i = 1, itemAmount do
         -- Convert each container individually so its durability follows it.
         -- Removing by name in bulk loses the metadata belonging to each item.
@@ -660,7 +680,6 @@ Core.Callback.Register('bcc-water:GetItem', function(source, cb, itemType, itemA
     cb(true)
 end)
 
--- Register the canteen as a usable item
 exports.vorp_inventory:registerUsableItem(Config.canteen, function(data)
     local src = data.source
     exports.vorp_inventory:closeInventory(src)
@@ -683,55 +702,50 @@ exports.vorp_inventory:registerUsableItem(Config.canteen, function(data)
     end
 end, GetCurrentResourceName())
 
--- Clean Bottle (no sickness)
 if Config.useable.cleanBottle then
     DBG:Info('Registering clean bottle as usable item')
     exports.vorp_inventory:registerUsableItem(Config.cleanBottle, function(data)
         local src = data.source
         exports.vorp_inventory:closeInventory(src)
-        if not consumeContainer(data, 'bottle') then
+        if not consumeContainerData(data, 'bottle') then
             return
         end
         TriggerClientEvent('bcc-water:DrinkBottle', src, false)
     end, GetCurrentResourceName())
 end
 
--- Dirty Bottle (sickness chance)
 if Config.useable.dirtyBottle then
     DBG:Info('Registering dirty bottle as usable item')
     exports.vorp_inventory:registerUsableItem(Config.dirtyBottle, function(data)
         local src = data.source
         exports.vorp_inventory:closeInventory(src)
-        if not consumeContainer(data, 'bottle') then
+        if not consumeContainerData(data, 'bottle') then
             return
         end
         TriggerClientEvent('bcc-water:DrinkBottle', src, true)
     end, GetCurrentResourceName())
 end
 
--- Clean Bucket (no sickness)
 if Config.useable.cleanBucket then
     DBG:Info('Registering clean bucket as usable item')
     exports.vorp_inventory:registerUsableItem(Config.cleanBucket, function(data)
         local src = data.source
         exports.vorp_inventory:closeInventory(src)
-        if not consumeContainer(data, 'bucket') then
+        if not consumeContainerData(data, 'bucket') then
             return
         end
         TriggerClientEvent('bcc-water:DrinkBucket', src, false)
     end, GetCurrentResourceName())
 end
 
--- Dirty Bucket (sickness chance)
 if Config.useable.dirtyBucket then
     DBG:Info('Registering dirty bucket as usable item')
     exports.vorp_inventory:registerUsableItem(Config.dirtyBucket, function(data)
         local src = data.source
         exports.vorp_inventory:closeInventory(src)
-        if not consumeContainer(data, 'bucket') then
+        if not consumeContainerData(data, 'bucket') then
             return
         end
         TriggerClientEvent('bcc-water:DrinkBucket', src, true)
     end, GetCurrentResourceName())
 end
-
