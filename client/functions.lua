@@ -6,10 +6,54 @@ local PlayAnim = WaterClient.PlayAnim
 local SicknessAnimations = { 'idle_a', 'idle_b', 'idle_c' }
 local FemaleRiverWashAnimations = { 'idle_a', 'idle_b', 'idle_c' }
 local MaleRiverWashAnimations = { 'idle_d', 'idle_e', 'idle_f' }
+local ScenarioPointLimit = 10
+local ScenarioPointAlignment = 8
+local GetScenarioPointsInAreaHash = 0x345EC3B7EBDE1CB5
 
 local function genderedAnimation(playerPed, maleDict, femaleDict, animName)
     return IsPedMale(playerPed) and maleDict or femaleDict, animName
 end
+
+---@param acceptedHashes table<number, boolean>
+---@return number|nil
+local function findNearbyScenarioPoint(acceptedHashes)
+    local coords = WaterClient.GetCoords()
+    local data = DataView.ArrayBuffer((ScenarioPointLimit + 1) * ScenarioPointAlignment)
+    local count = Citizen.InvokeNative(
+        GetScenarioPointsInAreaHash,
+        coords.x,
+        coords.y,
+        coords.z,
+        2.0,
+        data:Buffer(),
+        ScenarioPointLimit,
+        Citizen.ResultAsInteger()
+    )
+
+    count = math.floor(math.min(math.max(tonumber(count) or 0, 0), ScenarioPointLimit))
+    for index = 1, count do
+        local scenario = data:GetInt32(ScenarioPointAlignment * index)
+        if scenario and acceptedHashes[GetScenarioPointType(scenario)] then
+            return scenario
+        end
+    end
+
+    return nil
+end
+
+local PumpScenarioHashes = {
+    [joaat('PROP_HUMAN_PUMP_WATER')] = true,
+    [joaat('PROP_HUMAN_PUMP_WATER_FEMALE_B')] = true,
+    [joaat('PROP_HUMAN_PUMP_WATER_MALE_A')] = true,
+}
+
+local BucketPumpScenarioHashes = {
+    [joaat('PROP_HUMAN_PUMP_WATER')] = true,
+    [joaat('PROP_HUMAN_PUMP_WATER_BUCKET')] = true,
+    [joaat('PROP_HUMAN_PUMP_WATER_BUCKET_MALE_A')] = true,
+    [joaat('PROP_HUMAN_PUMP_WATER_FEMALE_B')] = true,
+    [joaat('PROP_HUMAN_PUMP_WATER_MALE_A')] = true,
+}
 
 local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage)
     DBG:Info(string.format('Filling container with model: %s', tostring(modelName)))
@@ -57,26 +101,15 @@ local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage
 
         WaterClient.DeleteTrackedObject(container)
     else
-        local taskRun = false
-        local DataStruct = DataView.ArrayBuffer(256 * 4)
-        local pointsExist = GetScenarioPointsInArea(WaterClient.GetCoords(), 2.0, DataStruct:Buffer(), 10)
+        local scenario = findNearbyScenarioPoint(PumpScenarioHashes)
+        local taskRun = scenario ~= nil
 
-        if not pointsExist then goto NEXT end
-
-        for i = 1, 1 do
-            local scenario = DataStruct:GetInt32(8 * i)
-            local hash = GetScenarioPointType(scenario)
-
-            if hash == joaat('PROP_HUMAN_PUMP_WATER') then
-                taskRun = true
-                ClearPedTasksImmediately(playerPed)
-                TaskUseScenarioPoint(playerPed, scenario, '', -1.0, true, false, 0, false, -1.0, true)
-                Wait(15000)
-                break
-            end
+        if scenario then
+            ClearPedTasksImmediately(playerPed)
+            TaskUseScenarioPoint(playerPed, scenario, '', -1.0, true, false, 0, false, -1.0, true)
+            Wait(15000)
         end
 
-        ::NEXT::
         if not taskRun then
             local animDict, animName = genderedAnimation(
                 playerPed,
@@ -122,29 +155,18 @@ function BucketFill(pumpAnim)
         Wait(4000)
         HidePedWeapons(playerPed, 2, true)
     else
-        local taskRun = false
-        local DataStruct = DataView.ArrayBuffer(256 * 4)
-        local pointsExist = GetScenarioPointsInArea(WaterClient.GetCoords(), 2.0, DataStruct:Buffer(), 10)
+        local scenario = findNearbyScenarioPoint(BucketPumpScenarioHashes)
+        local taskRun = scenario ~= nil
 
-        if not pointsExist then goto NEXT end
-
-        for i = 1, 1 do
-            local scenario = DataStruct:GetInt32(8 * i)
-            local hash = GetScenarioPointType(scenario)
-
-            if hash == joaat('PROP_HUMAN_PUMP_WATER') or hash == joaat('PROP_HUMAN_PUMP_WATER_BUCKET') then
-                taskRun = true
-                ClearPedTasksImmediately(playerPed)
-                TaskUseScenarioPoint(playerPed, scenario, '', -1.0, true, false, 0, false, -1.0, true)
-                Wait(15000)
-                ClearPedTasks(playerPed, true, true)
-                Wait(5000)
-                HidePedWeapons(playerPed, 2, true)
-                break
-            end
+        if scenario then
+            ClearPedTasksImmediately(playerPed)
+            TaskUseScenarioPoint(playerPed, scenario, '', -1.0, true, false, 0, false, -1.0, true)
+            Wait(15000)
+            ClearPedTasks(playerPed, true, true)
+            Wait(5000)
+            HidePedWeapons(playerPed, 2, true)
         end
 
-        ::NEXT::
         if not taskRun then
             local animDict, animName = genderedAnimation(
                 playerPed,
@@ -310,25 +332,17 @@ function WashPlayer(animType)
 
     -- Check for soap requirement
     if Config.requireSoap then
-        local hasSoap, soapItem = Core.Callback.TriggerAwait('bcc-water:CheckSoapItems')
-        if not hasSoap then
-            if Config.showMessages then
-                Core.NotifyRightTip(_U('noSoap'), 4000)
-            end
-            DBG:Info('Player does not have any required soap items.')
-            return
-        end
-
-        -- Use soap item (with durability or consumption based on config)
         local soapUsed, usedSoapItem = Core.Callback.TriggerAwait('bcc-water:UseSoapItem')
         if not soapUsed then
             if Config.showMessages then
-                Core.NotifyRightTip(_U('failedToUseSoap'), 4000)
+                local message = usedSoapItem and _U('failedToUseSoap') or _U('noSoap')
+                Core.NotifyRightTip(message, 4000)
             end
-            DBG:Info('Failed to use soap item.')
+            DBG:Info(usedSoapItem and 'Failed to use soap item.'
+                or 'Player does not have any required soap items.')
             return
         end
-        
+
         if Config.consumeSoap then
             DBG:Info(string.format('Soap item used for washing: %s', usedSoapItem or 'unknown'))
         else
@@ -474,7 +488,6 @@ RegisterNetEvent('bcc-water:BeginAntidote', function(itemId)
         return
     end
 
-    -- This intentionally replaces a cough or vomit animation already playing.
     ClearPedTasks(playerPed)
     local animation = Config.antidoteAnimation
     local completed = PlayAnim(
@@ -501,8 +514,8 @@ end)
 function PlayerStats(isWild)
     DBG:Info('Updating player stats.')
     local playerPed = PlayerPedId()
-    local health = GetAttributeCoreValue(playerPed, 0, Citizen.ResultAsInteger())
-    local stamina = GetAttributeCoreValue(playerPed, 1, Citizen.ResultAsInteger())
+    local health = Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 0, Citizen.ResultAsInteger()) -- GetAttributeCoreValue
+    local stamina = Citizen.InvokeNative(0x36731AC041289BB1, playerPed, 1, Citizen.ResultAsInteger()) -- GetAttributeCoreValue
     local thirst = isWild and Config.wildDrink.thirst or Config.canteenDrink.thirst
     local app = Config.app
 
