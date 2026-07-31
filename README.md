@@ -17,33 +17,29 @@
 
 ### Consuming Buckets from Another Resource
 
-Existing bucket integrations remain compatible and can continue managing the
-filled and empty items themselves. To preserve the durability of the exact
-bucket being used, call the server export from the bucket's usable-item handler:
+Call the server export with the player source and container type:
 
 ```lua
-local replaced = exports['bcc-water']:ConsumeContainer(data, 'bucket')
-if not replaced then
+local consumed = exports['bcc-water']:ConsumeContainer(source, 'bucket')
+if not consumed then
     return
 end
 
 -- Continue the bucket's effect here.
 ```
 
-Each export call applies one bucket use and its configured durability loss.
-The filled bucket remains until its configured uses per fill reach zero, then
-it is replaced by its empty counterpart. On its final durability use the bucket
-breaks, so the export still returns `true` but no empty bucket is added. Do not
-also update, remove, or replace the bucket in the calling resource.
-
-Resources without usable-item callback data can use the simpler server export:
+The same export supports bottles. An optional inventory item ID selects an exact
+container instead of automatically choosing a configured clean or dirty item:
 
 ```lua
-local consumed = exports['bcc-water']:ConsumeBucket(source)
+local consumed = exports['bcc-water']:ConsumeContainer(source, 'bottle', itemId)
 ```
 
-It locates a configured clean or dirty bucket and applies one complete
-bcc-water-managed use.
+Each call applies one use and its configured durability loss. The filled
+container remains until its uses reach zero, then it is replaced by its empty
+counterpart. On its final durability use it breaks, so the export still returns
+`true` but no empty item is added. Calling resources must not also update,
+remove, or replace the container.
 
 ### Purifying Dirty Water
 
@@ -98,6 +94,8 @@ canteens, buckets, and bottles under `Config.usesPerFill` and
   - To auto-seed on resource start, ensure `autoSeedDatabase = true` in `shared/configs/main.lua`.
 
   - To force a manual seed from the server console, run the command: `bcc-water:seed`.
+
+  - The bundled definition follows the first configured antidote, first configured soap, and first requirement of the `tablets` purification method. Additional custom antidotes, soaps, or purification reagents require their own `items` database definitions.
 
   Verify seeded items
 
