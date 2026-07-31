@@ -4,6 +4,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 lua54 'yes'
 author 'BCC Team'
+version '3.0.0'
 
 shared_scripts {
     'shared/configs/*.lua',
@@ -28,5 +29,3 @@ server_scripts {
     'server/services/sickness.lua',
     'server/services/soap.lua'
 }
-
-version '2.5.1'
