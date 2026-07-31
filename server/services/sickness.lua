@@ -66,7 +66,11 @@ local function useAntidoteOnPlayer(providerSource, patientSource, itemId, expect
     end
 
     local patientCharid = getCharacterId(patient)
-    local deadline = patientCharid and sickPlayers[patientCharid]
+    if not patientCharid then
+        return false, 'invalid_patient'
+    end
+
+    local deadline = sickPlayers[patientCharid]
     if not deadline then
         return false, 'not_sick'
     end
@@ -112,6 +116,7 @@ end
 -- Server-only integrations for doctor, medic, and treatment resources.
 exports('IsPlayerSick', isPlayerSick)
 exports('UseAntidoteOnPlayer', function(providerSource, patientSource, itemId)
+    ---@diagnostic disable-next-line: redundant-return-value -- Server exports support multiple Lua returns.
     return useAntidoteOnPlayer(providerSource, patientSource, itemId)
 end)
 
