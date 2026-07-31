@@ -1,22 +1,15 @@
-local SEED_VERSION = 3
-
-local ITEMS = {
-    { 'canteen', 'Canteen', 1, 1, 'item_standard', 1, 'A portable container to carry water.' },
-    { 'wateringcan', 'Water Jug', 10, 1, 'item_standard', 1, 'A bucket of clean water.' },
-    { 'wateringcan_empty', 'Empty Watering Jug', 10, 1, 'item_standard', 1, 'An empty water bucket.' },
-    { 'wateringcan_dirtywater', 'Dirty Water Jug', 10, 1, 'item_standard', 1, 'A bucket filled with dirty water.' },
-    { 'bcc_empty_bottle', 'Empty Bottle', 15, 1, 'item_standard', 1, 'An empty bottle.' },
-    { 'bcc_clean_bottle', 'Clean Water Bottle', 15, 1, 'item_standard', 1, 'A bottle filled with clean water.' },
-    { 'bcc_dirty_bottle', 'Dirty Water Bottle', 15, 1, 'item_standard', 1, 'A bottle filled with dirty water.' },
-    { 'antidote', 'Antidote', 5, 1, 'item_standard', 1, 'A remedy to cure sickness.' },
-    { 'purification_tablet', 'Purification Tablet', 20, 1, 'item_standard', 0, 'Purifies one container of dirty water.' },
-    { 'bcc_soap_bar', 'Soap Bar', 10, 1, 'item_standard', 1, 'A bar of soap for washing.' },
-}
+local SEED_VERSION = 4
 
 local UPSERT_SQL = [[
 INSERT INTO `items` (`item`, `label`, `limit`, `can_remove`, `type`, `usable`, `desc`)
 VALUES (?, ?, ?, ?, ?, ?, ?)
-ON DUPLICATE KEY UPDATE `label` = VALUES(`label`), `limit` = VALUES(`limit`), `can_remove` = VALUES(`can_remove`), `type` = VALUES(`type`), `usable` = VALUES(`usable`), `desc` = VALUES(`desc`);
+ON DUPLICATE KEY UPDATE
+  `label` = VALUES(`label`),
+  `limit` = VALUES(`limit`),
+  `can_remove` = VALUES(`can_remove`),
+  `type` = VALUES(`type`),
+  `usable` = VALUES(`usable`),
+  `desc` = VALUES(`desc`);
 ]]
 
 local CREATE_MIGRATIONS_SQL = [[
@@ -26,102 +19,103 @@ CREATE TABLE IF NOT EXISTS `resource_migrations` (
 );
 ]]
 
-local function hasAwaitMySQL()
-    return (MySQL ~= nil and MySQL.query ~= nil and MySQL.query.await ~= nil) or false
+local SET_MIGRATION_SQL = [[
+INSERT INTO `resource_migrations` (`resource`, `version`)
+VALUES (?, ?)
+ON DUPLICATE KEY UPDATE `version` = VALUES(`version`);
+]]
+
+---@param value boolean
+---@return integer
+local function usableFlag(value)
+    return value == true and 1 or 0
 end
 
+---@return table
+local function buildItems()
+    local items = {}
+    local seen = {}
+
+    local function add(name, label, limit, usable, description)
+        if type(name) ~= 'string' or name == '' or seen[name] then return end
+        seen[name] = true
+        items[#items + 1] = {
+            name,
+            label,
+            limit,
+            1,
+            'item_standard',
+            usableFlag(usable),
+            description,
+        }
+    end
+
+    add(Config.canteen, 'Canteen', 1, true,
+        'A portable container to carry water.')
+    add(Config.cleanBucket, 'Water Jug', 10, Config.useable.cleanBucket,
+        'A bucket of clean water.')
+    add(Config.emptyBucket, 'Empty Watering Jug', 10, false,
+        'An empty water bucket.')
+    add(Config.dirtyBucket, 'Dirty Water Jug', 10, Config.useable.dirtyBucket,
+        'A bucket filled with dirty water.')
+    add(Config.emptyBottle, 'Empty Bottle', 15, false,
+        'An empty bottle.')
+    add(Config.cleanBottle, 'Clean Water Bottle', 15, Config.useable.cleanBottle,
+        'A bottle filled with clean water.')
+    add(Config.dirtyBottle, 'Dirty Water Bottle', 15, Config.useable.dirtyBottle,
+        'A bottle filled with dirty water.')
+
+    -- The first configured list entry receives the bundled default definition.
+    -- Additional custom entries require their own database definitions.
+    add(Config.antidoteItems[1], 'Antidote', 5, Config.useable.antidotes,
+        'A remedy to cure sickness.')
+    add(Config.soapItem[1], 'Soap Bar', 10, false,
+        'A bar of soap for washing.')
+
+    local tabletMethod = Config.purification.methods.tablets
+    local tabletRequirement = tabletMethod and tabletMethod.requiredItems
+        and tabletMethod.requiredItems[1]
+    add(tabletRequirement and tabletRequirement.name, 'Purification Tablet', 20, false,
+        'Purifies one container of dirty water.')
+
+    return items
+end
+
+---@param maxAttempts? integer
+---@param delay? integer
+---@return boolean
 local function waitForDB(maxAttempts, delay)
-    maxAttempts = maxAttempts or 8
+    maxAttempts = maxAttempts or 20
     delay = delay or 500
-    for i = 1, maxAttempts do
-        if hasAwaitMySQL() then
-            local ok = pcall(function() return MySQL.query.await('SELECT 1') end)
+
+    for _ = 1, maxAttempts do
+        if MySQL and MySQL.query and MySQL.query.await then
+            local ok = pcall(function()
+                return MySQL.query.await('SELECT 1')
+            end)
             if ok then return true end
-        else
-            if exports and (exports.mysql or exports.oxmysql) then
-                return true
-            end
         end
         Wait(delay)
-        delay = delay * 2
     end
+
     return false
 end
 
-local function dbExecuteAwait(sql, params)
-    if hasAwaitMySQL() then
-        return MySQL.update.await(sql, params)
-    end
-    local done = false
-    local result = nil
-    local db = exports and (exports.mysql or exports.oxmysql) or nil
-    if not db then error('No DB available') end
-    db:execute(sql, params or {}, function(res)
-        result = res
-        done = true
-    end)
-    local tick = 0
-    while not done and tick < 100 do
-        Wait(50)
-        tick = tick + 1
-    end
-    return result
+local function ensureMigrationTable()
+    MySQL.query.await(CREATE_MIGRATIONS_SQL)
 end
 
-local function dbQueryAwait(sql, params)
-    if hasAwaitMySQL() then
-        return MySQL.query.await(sql, params)
-    end
-    local done = false
-    local result = nil
-    local db = exports and (exports.mysql or exports.oxmysql) or nil
-    if not db then error('No DB available') end
-    db:execute(sql, params or {}, function(res)
-        result = res
-        done = true
-    end)
-    local tick = 0
-    while not done and tick < 100 do
-        Wait(50)
-        tick = tick + 1
-    end
-    return result
-end
-
+---@return integer
 local function getMigrationVersion()
-    if not waitForDB() then return 0 end
-
-    if hasAwaitMySQL() then
-        MySQL.update.await(CREATE_MIGRATIONS_SQL)
-        local rows = MySQL.query.await('SELECT version FROM resource_migrations WHERE resource = ?', { GetCurrentResourceName() })
-        if rows and rows[1] and rows[1].version then
-            return tonumber(rows[1].version) or 0
-        end
-        return 0
-    else
-        dbExecuteAwait(CREATE_MIGRATIONS_SQL)
-        local rows = dbQueryAwait('SELECT version FROM resource_migrations WHERE resource = ?', { GetCurrentResourceName() })
-        if rows and rows[1] and rows[1].version then
-            return tonumber(rows[1].version) or 0
-        end
-        return 0
-    end
+    local version = MySQL.scalar.await(
+        'SELECT `version` FROM `resource_migrations` WHERE `resource` = ?',
+        { GetCurrentResourceName() }
+    )
+    return tonumber(version) or 0
 end
 
-local function setMigrationVersion(v)
-    if hasAwaitMySQL() then
-        MySQL.update.await('INSERT INTO resource_migrations(resource, version) VALUES(?, ?) ON DUPLICATE KEY UPDATE version = VALUES(version);', { GetCurrentResourceName(), v })
-    else
-        dbExecuteAwait('INSERT INTO resource_migrations(resource, version) VALUES(?, ?) ON DUPLICATE KEY UPDATE version = VALUES(version);', { GetCurrentResourceName(), v })
-    end
-end
-
+---@param force boolean
 local function seedItems(force)
-    if not Config then
-        DBG:Warning('Config missing; cannot determine autoSeedDatabase setting. Skipping seeding.')
-        return
-    end
-
     if Config.autoSeedDatabase == false and not force then
         DBG:Info('autoSeedDatabase disabled in config; skipping DB seeding.')
         return
@@ -132,37 +126,52 @@ local function seedItems(force)
         return
     end
 
-    local currentVersion = 0
-    local ok, err = pcall(function() currentVersion = getMigrationVersion() end)
-    if not ok then
-        DBG:Warning(string.format('Failed to get migration version: %s', tostring(err)))
-        currentVersion = 0
-    end
-
-    if currentVersion >= SEED_VERSION and not force then
-        DBG:Info(string.format('Items already seeded (version %s), skipping.', tostring(currentVersion)))
+    local setupOk, setupError = pcall(ensureMigrationTable)
+    if not setupOk then
+        DBG:Error(string.format('Failed to create migration table: %s', tostring(setupError)))
         return
     end
 
-    DBG:Info('Seeding items...')
-    for _, item in ipairs(ITEMS) do
-        local ok2, res = pcall(function()
-            return dbExecuteAwait(UPSERT_SQL, { item[1], item[2], item[3], item[4], item[5], item[6], item[7] })
-        end)
-
-        if not ok2 then
-            DBG:Error(string.format('Failed to upsert item %s: %s', tostring(item[1]), tostring(res)))
-        else
-            DBG:Info(string.format('Upserted item: %s', tostring(item[1])))
-        end
+    local versionOk, currentVersion = pcall(getMigrationVersion)
+    if not versionOk then
+        DBG:Error(string.format('Failed to get migration version: %s', tostring(currentVersion)))
+        return
     end
 
-    pcall(function() setMigrationVersion(SEED_VERSION) end)
-    DBG:Info(string.format('Seeding complete; set seed version to %s', tostring(SEED_VERSION)))
+    if currentVersion >= SEED_VERSION and not force then
+        DBG:Info(string.format('Items already seeded (version %s), skipping.',
+            tostring(currentVersion)))
+        return
+    end
+
+    local items = buildItems()
+    local queries = {}
+    for _, item in ipairs(items) do
+        queries[#queries + 1] = {
+            query = UPSERT_SQL,
+            values = item,
+        }
+    end
+    queries[#queries + 1] = {
+        query = SET_MIGRATION_SQL,
+        values = { GetCurrentResourceName(), SEED_VERSION },
+    }
+
+    DBG:Info(string.format('Seeding %d configured items...', #items))
+    local transactionOk, transactionResult = pcall(function()
+        return MySQL.transaction.await(queries)
+    end)
+    if not transactionOk or transactionResult ~= true then
+        DBG:Error(string.format('Item seed transaction failed: %s',
+            transactionOk and 'transaction rolled back' or tostring(transactionResult)))
+        return
+    end
+
+    DBG:Info(string.format('Seeding complete; set seed version to %d.', SEED_VERSION))
 end
 
 -- Console-only manual seed
-RegisterCommand('bcc-water:seed', function(source, args, raw)
+RegisterCommand('bcc-water:seed', function(source)
     if source ~= 0 then
         DBG:Warning('bcc-water:seed can only be run from server console')
         return
@@ -170,8 +179,8 @@ RegisterCommand('bcc-water:seed', function(source, args, raw)
     seedItems(true)
 end, true)
 
--- Console-only verify
-RegisterCommand('bcc-water:verify', function(source, args, raw)
+-- Console-only verification of bundled/config-derived item definitions
+RegisterCommand('bcc-water:verify', function(source)
     if source ~= 0 then
         DBG:Warning('bcc-water:verify can only be run from server console')
         return
@@ -183,21 +192,24 @@ RegisterCommand('bcc-water:verify', function(source, args, raw)
     end
 
     local missing = {}
-    for _, item in ipairs(ITEMS) do
-        local rows = dbQueryAwait('SELECT item FROM items WHERE item = ?', { item[1] })
-        if not rows or #rows == 0 then
-            table.insert(missing, item[1])
+    for _, item in ipairs(buildItems()) do
+        local exists = MySQL.scalar.await(
+            'SELECT 1 FROM `items` WHERE `item` = ? LIMIT 1',
+            { item[1] }
+        )
+        if not exists then
+            missing[#missing + 1] = item[1]
         end
     end
 
     if #missing == 0 then
-        DBG:Info('All items present in the items table.')
+        DBG:Info('All configured default items are present in the items table.')
     else
         DBG:Warning(string.format('Missing items: %s', table.concat(missing, ', ')))
     end
 end, true)
 
--- Auto-run on resource start (if enabled in config)
+-- Auto-run on resource start when enabled in config
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
     CreateThread(function()
@@ -205,4 +217,3 @@ AddEventHandler('onResourceStart', function(resourceName)
         seedItems(false)
     end)
 end)
-
