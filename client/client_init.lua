@@ -1,6 +1,6 @@
 Core = exports.vorp_core:GetCore()
 FeatherMenu = exports['feather-menu'].initiate()
-BccUtils = exports['bcc-utils'].initiate()
+local BccUtils = exports['bcc-utils'].initiate()
 DBG = BccUtils.Debug:Get('bcc-water', Config.devMode.active)
 
 if DBG then
@@ -8,8 +8,6 @@ if DBG then
     DBG:Info('Water debug initialized')
 end
 
--- Shared client state and asset helpers are initialized here so every later
--- client file can safely use them regardless of resource packaging.
 WaterClient = {
     filling = false,
     objects = {}
