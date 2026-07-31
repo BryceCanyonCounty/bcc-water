@@ -7,13 +7,13 @@ author 'BCC Team'
 
 shared_scripts {
     'shared/configs/*.lua',
-	'shared/locale.lua',
-	'shared/languages/*.lua'
+    'shared/locale.lua',
+    'shared/languages/*.lua'
 }
 
 client_scripts {
     'client/client_init.lua',
-	'client/dataview.lua',
+    'client/dataview.lua',
     'client/functions.lua',
     'client/menus/input.lua',
     'client/main.lua'
@@ -26,8 +26,7 @@ server_scripts {
     'server/services/inventory.lua',
     'server/services/containers.lua',
     'server/services/sickness.lua',
-    'server/services/soap.lua',
-	'server/main.lua'
+    'server/services/soap.lua'
 }
 
 version '2.5.1'
