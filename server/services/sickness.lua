@@ -12,6 +12,109 @@ local function getCharacterId(src)
     return character and character.charIdentifier or nil
 end
 
+---@param itemName string
+---@return boolean
+local function isConfiguredAntidote(itemName)
+    for _, configuredItem in ipairs(Config.antidoteItems) do
+        if configuredItem == itemName then
+            return true
+        end
+    end
+    return false
+end
+
+---@param playerSource number|string
+---@return boolean sick
+---@return number remaining
+local function isPlayerSick(playerSource)
+    local src = tonumber(playerSource)
+    if not src then return false, 0 end
+
+    local charid = getCharacterId(src)
+    if not charid then return false, 0 end
+
+    local deadline = sickPlayers[charid]
+    if not deadline then return false, 0 end
+
+    local remaining = deadline - os.time()
+    if remaining <= 0 then
+        TriggerClientEvent('bcc-water:ForceSicknessDeath', src)
+        return false, 0
+    end
+
+    return true, remaining
+end
+
+---@param providerSource number|string
+---@param patientSource number|string
+---@param itemId number|string
+---@param expectedItemName? string
+---@return boolean cured
+---@return string reason
+local function useAntidoteOnPlayer(providerSource, patientSource, itemId, expectedItemName)
+    local provider = tonumber(providerSource)
+    local patient = tonumber(patientSource)
+    local targetItemId = tonumber(itemId)
+    if not provider or not Core.getUser(provider) then
+        return false, 'invalid_provider'
+    end
+    if not patient or not Core.getUser(patient) then
+        return false, 'invalid_patient'
+    end
+    if not targetItemId then
+        return false, 'invalid_item'
+    end
+
+    local patientCharid = getCharacterId(patient)
+    local deadline = patientCharid and sickPlayers[patientCharid]
+    if not deadline then
+        return false, 'not_sick'
+    end
+    if deadline <= os.time() then
+        TriggerClientEvent('bcc-water:ForceSicknessDeath', patient)
+        return false, 'expired'
+    end
+
+    local cured, reason = WaterInventory.withItemLock(provider, targetItemId, function()
+        local currentCharid = getCharacterId(patient)
+        local currentDeadline = currentCharid and sickPlayers[currentCharid]
+        if currentCharid ~= patientCharid then
+            return false, 'patient_changed_character'
+        end
+        if not currentDeadline then
+            return false, 'not_sick'
+        end
+        if currentDeadline <= os.time() then
+            TriggerClientEvent('bcc-water:ForceSicknessDeath', patient)
+            return false, 'expired'
+        end
+
+        local antidote = WaterInventory.getItemInstance(provider, targetItemId)
+        if not antidote or not isConfiguredAntidote(antidote.name)
+                or (expectedItemName and antidote.name ~= expectedItemName) then
+            return false, 'invalid_item'
+        end
+        if not WaterInventory.removeOneItemById(provider, antidote.id) then
+            return false, 'remove_failed'
+        end
+
+        sickPlayers[patientCharid] = nil
+        pendingAntidotes[patient] = nil
+        TriggerClientEvent('bcc-water:CureSickness', patient)
+        DBG:Info(string.format('Antidote %d from source %d cured character ID %d',
+            antidote.id, provider, patientCharid))
+        return true, 'cured'
+    end)
+
+    return cured == true, reason or 'item_busy'
+end
+
+-- Server-only integrations for doctor, medic, and treatment resources.
+exports('IsPlayerSick', isPlayerSick)
+exports('UseAntidoteOnPlayer', function(providerSource, patientSource, itemId)
+    return useAntidoteOnPlayer(providerSource, patientSource, itemId)
+end)
+
 Core.Callback.Register('bcc-water:RollSickness', function(source, cb)
     local src = source
     local charid = getCharacterId(src)
@@ -148,23 +251,11 @@ RegisterNetEvent('bcc-water:CompleteAntidote', function(itemId)
         return
     end
 
-    WaterInventory.withItemLock(src, pending.itemId, function()
-        local antidote = WaterInventory.getItemInstance(src, pending.itemId)
-        if not antidote or antidote.name ~= pending.itemName then
-            DBG:Warning(string.format('Refused changed antidote %s for source %d',
-                tostring(pending.itemId), src))
-            return false
-        end
-        if not WaterInventory.removeOneItemById(src, antidote.id) then
-            return false
-        end
-
-        sickPlayers[pending.charid] = nil
-        TriggerClientEvent('bcc-water:CureSickness', src)
-        DBG:Info(string.format('Antidote %d cured character ID %d',
-            antidote.id, pending.charid))
-        return true
-    end)
+    local cured, reason = useAntidoteOnPlayer(src, src, pending.itemId, pending.itemName)
+    if not cured then
+        DBG:Warning(string.format('Failed to complete antidote use for source %d: %s',
+            src, reason))
+    end
 end)
 
 RegisterNetEvent('bcc-water:CancelAntidote', function()
