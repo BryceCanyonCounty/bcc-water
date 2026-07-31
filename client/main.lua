@@ -72,10 +72,8 @@ local function ManageItems(itemType, pump)
     end
 end
 
--- Start main functions when character is selected
-RegisterNetEvent('vorp:SelectedCharacter', function()
-    DBG:Info('Character selected, starting main functions...')
-
+---@param delaySickness boolean
+local function StartMainFunctions(delaySickness)
     StartPrompts()
 
     if Config.pump.active then
@@ -91,41 +89,30 @@ RegisterNetEvent('vorp:SelectedCharacter', function()
     DBG:Info('Checking server for player sickness.')
     local sickness = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
     if sickness and sickness.sick then
-        DBG:Info('Waiting to apply sickness effect...')
-        local delay = math.min(30, sickness.remaining)
-        Wait(delay * 1000)
-        ApplySicknessEffect(math.max(0, sickness.remaining - delay))
+        local remaining = math.max(0, tonumber(sickness.remaining) or 0)
+        if delaySickness then
+            DBG:Info('Waiting to apply sickness effect...')
+            local delay = math.min(30, remaining)
+            Wait(delay * 1000)
+            remaining = math.max(0, remaining - delay)
+        end
+        ApplySicknessEffect(remaining)
     end
+end
 
+-- Start main functions when character is selected
+RegisterNetEvent('vorp:SelectedCharacter', function()
+    DBG:Info('Character selected, starting main functions...')
+    StartMainFunctions(true)
 end)
 
- -- Command to restart main functions for development
-CreateThread(function()
-    if Config.devMode.active then
-        RegisterCommand(Config.devMode.command, function()
-            DBG:Info('Restarting main functions for development...')
-
-            StartPrompts()
-
-            if Config.pump.active then
-                DBG:Info('Triggering PumpWater event for development.')
-                TriggerEvent('bcc-water:PumpWater')
-            end
-
-            if Config.wild.active then
-                DBG:Info('Triggering WildWater event for development.')
-                TriggerEvent('bcc-water:WildWater')
-            end
-
-            DBG:Info('Checking server for player sickness.')
-            local sickness = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
-            if sickness and sickness.sick then
-                ApplySicknessEffect(sickness.remaining)
-            end
-
-        end, false)
-    end
-end)
+-- Command to restart main functions for development
+if Config.devMode.active then
+    RegisterCommand(Config.devMode.command, function()
+        DBG:Info('Restarting main functions for development...')
+        StartMainFunctions(false)
+    end, false)
+end
 
 local function HandleWaterInteraction(configType, promptGroup, actions, promptNameFunc, canInteractFunc)
     while true do
