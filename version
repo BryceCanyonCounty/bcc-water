@@ -9,5 +9,4 @@
 - Added reusable soap for washing.
 - Added configurable use limits and cooldowns.
 - Added automatic database item setup.
-- Added one export for external container use.
-- Improved animations, menus, security, and performance.
+- Added export for external container use.
