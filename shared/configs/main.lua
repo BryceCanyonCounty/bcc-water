@@ -24,7 +24,7 @@ Config = {
     usePrompt = true,        -- Use RedM hold prompts; false uses floating key text.
 
     devMode = {
-        active = true,        -- Enable the client restart command and debug messages for testing.
+        active = false,        -- Enable the client restart command and debug messages for testing.
         command = 'WaterDev', -- Command name used when developer mode is enabled.
     },
 
