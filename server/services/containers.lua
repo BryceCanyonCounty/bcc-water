@@ -634,10 +634,13 @@ Core.Callback.Register('bcc-water:GetItem', function(source, cb, itemType, itemA
 
     local emptyItem = itemType == 'bucket' and Config.emptyBucket or Config.emptyBottle
     local notification = itemType == 'bucket' and _U('needBucket') or _U('needBottle')
-    local item = exports.vorp_inventory:getItem(src, emptyItem)
-    if not item or item.count < itemAmount then
+    -- Empty containers may be split into several stacks because their durability
+    -- metadata differs. Count every matching stack before starting a multi-fill.
+    local availableCount = tonumber(exports.vorp_inventory:getItemCount(src, nil, emptyItem)) or 0
+    if availableCount < itemAmount then
         Core.NotifyRightTip(src, notification, 4000)
-        DBG:Warning(string.format('Source %d does not have the required item: %s', src, emptyItem))
+        DBG:Warning(string.format('Source %d needs %d %s but only has %d',
+            src, itemAmount, emptyItem, availableCount))
         return cb(false)
     end
 
