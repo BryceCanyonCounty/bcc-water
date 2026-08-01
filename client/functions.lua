@@ -55,6 +55,10 @@ local BucketPumpScenarioHashes = {
     [joaat('PROP_HUMAN_PUMP_WATER_MALE_A')] = true,
 }
 
+---@param pumpAnim boolean
+---@param modelName string
+---@param modelHash number
+---@param notificationMessage string
 local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage)
     DBG:Info(string.format('Filling container with model: %s', tostring(modelName)))
     WaterClient.SetFilling(true)
@@ -75,15 +79,9 @@ local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage
         end
         AttachEntityToEntity(container, playerPed, boneIndex, 0.12, 0.00, -0.10, 306.0, 18.0, 0.0, true, true, false, true, 2, true, false, false)
 
-        local animDict, animName = genderedAnimation(
-            playerPed,
-            'amb_work@world_human_crouch_inspect@male_a@idle_a',
-            'amb_work@world_human_crouch_inspect@female_a@idle_a',
-            'idle_a'
-        )
-        local exitDict = IsPedMale(playerPed)
-            and 'amb_work@world_human_crouch_inspect@male_a@stand_exit'
-            or 'amb_work@world_human_crouch_inspect@female_a@stand_exit'
+        local animDict = 'amb_work@world_human_crouch_inspect@male_a@idle_a'
+        local exitDict = 'amb_work@world_human_crouch_inspect@male_a@stand_exit'
+        local animName = 'idle_a'
 
         if not LoadAnim(animDict) or not LoadAnim(exitDict) then
             WaterClient.DeleteTrackedObject(container)
@@ -111,12 +109,11 @@ local function FillContainer(pumpAnim, modelName, modelHash, notificationMessage
         end
 
         if not taskRun then
-            local animDict, animName = genderedAnimation(
-                playerPed,
-                'amb_work@prop_human_pump_water@male_a@idle_a',
-                'amb_work@prop_human_pump_water@female_b@idle_a',
-                'idle_a_waterpump'
-            )
+            local animDict = 'amb_work@prop_human_pump_water@female_b@idle_a'
+            local animName = 'idle_a'
+            if IsPedMale(playerPed) then
+                animDict = 'amb_work@prop_human_pump_water@male_a@idle_a'
+            end
             PlayAnim(animDict, animName, 1, 10000)
         end
     end
@@ -168,12 +165,11 @@ function BucketFill(pumpAnim)
         end
 
         if not taskRun then
-            local animDict, animName = genderedAnimation(
-                playerPed,
-                'amb_work@prop_human_pump_water@male_a@idle_a',
-                'amb_work@prop_human_pump_water@female_b@idle_a',
-                'idle_a_waterpump'
-            )
+            local animDict = 'amb_work@prop_human_pump_water@female_b@idle_a'
+            local animName = 'idle_a'
+            if IsPedMale(playerPed) then
+                animDict = 'amb_work@prop_human_pump_water@male_a@idle_a'
+            end
             PlayAnim(animDict, animName, 1, 10000)
         end
     end
@@ -316,12 +312,12 @@ end)
 
 function PumpDrink()
     DBG:Info('Drinking from pump water.')
-    local animDict, animName = genderedAnimation(
-        PlayerPedId(),
-        'amb_work@prop_human_pump_water@male_a@idle_c',
-        'amb_work@prop_human_pump_water@female_b@idle_c',
-        'idle_g_waterpump'
-    )
+    local animDict = 'amb_work@prop_human_pump_water@female_b@idle_c'
+    local animName = 'idle_g'
+    if IsPedMale(PlayerPedId()) then
+        animDict = 'amb_work@prop_human_pump_water@male_a@idle_a'
+        animName = 'idle_a'
+    end
     PlayAnim(animDict, animName, 1, 5000)
     PlayerStats(false)
 end
