@@ -233,8 +233,58 @@ local function consumeContainer(playerSource, itemType, itemId)
     }, itemType)
 end
 
+---@param playerSource number|string
+---@param itemType 'bucket'|'bottle'
+---@param itemId? number|string
+---@return boolean
+local function hasContainer(playerSource, itemType, itemId)
+    local src = tonumber(playerSource)
+    if not src or not Core.getUser(src) then
+        return false
+    end
+
+    if itemType ~= 'bucket' and itemType ~= 'bottle' then
+        return false
+    end
+
+    local targetId = tonumber(itemId)
+    if itemId ~= nil and not targetId then
+        return false
+    end
+
+    local container
+    if targetId then
+        container = getItemInstance(src, targetId)
+    elseif itemType == 'bucket' then
+        container = exports.vorp_inventory:getItem(src, Config.cleanBucket)
+            or exports.vorp_inventory:getItem(src, Config.dirtyBucket)
+    else
+        container = exports.vorp_inventory:getItem(src, Config.cleanBottle)
+            or exports.vorp_inventory:getItem(src, Config.dirtyBottle)
+    end
+
+    if not container then
+        return false
+    end
+
+    local cleanItem = itemType == 'bucket' and Config.cleanBucket or Config.cleanBottle
+    local dirtyItem = itemType == 'bucket' and Config.dirtyBucket or Config.dirtyBottle
+    if container.name ~= cleanItem and container.name ~= dirtyItem then
+        return false
+    end
+
+    local metadata = containerMetadata(container, nil, itemType)
+    local durability = tonumber(metadata.durability) or Config.durability.defaults[itemType]
+    local durabilityUsage = math.max(0, tonumber(Config.durability.usage[itemType]) or 0)
+    local maxUses = math.max(1, tonumber(Config.usesPerFill[itemType]) or 1)
+    local usesLeft = tonumber(container.metadata and container.metadata.usesLeft) or maxUses
+
+    return usesLeft > 0 and (durabilityUsage <= 0 or durability >= durabilityUsage)
+end
+
 -- Public server integration for buckets and bottles. bcc-water owns item names,
 -- uses, durability, breakage, and empty-container replacement.
+exports('HasContainer', hasContainer)
 exports('ConsumeContainer', consumeContainer)
 
 ---@param src number
