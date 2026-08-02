@@ -192,6 +192,14 @@ Choose an option from the `MetabolismApps` list at the top of `shared/configs/ma
 
 Other server scripts can use a filled bucket or bottle through one export. `bcc-water` will handle the water use, durability, cooldown, breakage, and empty container for you.
 
+Check availability without consuming or changing the container:
+
+```lua
+local hasBucket = exports['bcc-water']:HasContainer(source, 'bucket')
+```
+
+`HasContainer` accepts the same `source`, `itemType`, and optional `itemId` arguments as `ConsumeContainer`. It returns `true` only when a matching filled container has remaining uses and enough durability for another use. It does not start a cooldown or alter inventory data.
+
 ```lua
 local consumed = exports['bcc-water']:ConsumeContainer(source, 'bucket')
 if not consumed then
