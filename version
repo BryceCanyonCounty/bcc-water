@@ -1,2 +1,9 @@
-<2.5.1>
-- Added config option to manage dirty water
+<3.0.0>
+- Added multi-use buckets, and bottles.
+- Added durability and breakage for all containers.
+- Preserved durability when containers become empty.
+- Added clean and dirty water containers.
+- Added dirty water purification.
+- Added doctor and medic treatment exports.
+- Added configurable use limits and cooldowns.
+- Added export for external container use.

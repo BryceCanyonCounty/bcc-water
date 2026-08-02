@@ -4,26 +4,28 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 lua54 'yes'
 author 'BCC Team'
+version '3.0.0'
 
 shared_scripts {
     'shared/configs/*.lua',
-	'shared/locale.lua',
-	'shared/languages/*.lua'
+    'shared/locale.lua',
+    'shared/languages/*.lua'
 }
 
 client_scripts {
     'client/client_init.lua',
-	'client/dataview.lua',
-    'client/main.lua',
+    'client/dataview.lua',
     'client/functions.lua',
-    'client/menus/input.lua'
+    'client/menus/input.lua',
+    'client/main.lua'
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/server_init.lua',
     'server/database.lua',
-	'server/main.lua'
+    'server/services/inventory.lua',
+    'server/services/containers.lua',
+    'server/services/sickness.lua',
+    'server/services/soap.lua'
 }
-
-version '2.5.1'

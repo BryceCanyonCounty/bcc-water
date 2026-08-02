@@ -1,5 +1,5 @@
 local _strblob = function(length)
-    return string.rep('\0', math.max(40 + 1, length))
+    return string.rep('\0', length)
 end
 
 ---@class DataView
@@ -37,11 +37,13 @@ DataView.__index = DataView
 local function _ib(o, l, t) return ((t.size < 0 and true) or (o + (t.size - 1) <= l)) end
 local function _ef(big) return (big and DataView.EndBig) or DataView.EndLittle end
 
---[[ Helper function for setting fixed datatypes within a buffer --]]
-SetFixed = nil
+-- Forward declaration used by the generated setters below.
+local SetFixed
 
 --[[ Create an ArrayBuffer with a size in bytes --]]
 function DataView.ArrayBuffer(length)
+    assert(type(length) == 'number' and length >= 0 and length == math.floor(length),
+        'DataView buffer length must be a non-negative integer')
     return setmetatable({
         offset = 1, length = length, blob = _strblob(length)
     }, DataView)
@@ -97,7 +99,7 @@ for label, datatype in pairs(DataView.FixedTypes) do
     DataView['GetFixed' .. label] = function(self, offset, typelen, endian)
         local o = self.offset + offset
         if o + (typelen - 1) <= self.length then
-            local code = _ef(endian) .. 'c' .. tostring(typelen)
+            local code = _ef(endian) .. datatype.code .. tostring(typelen)
             local v, _ = string.unpack(code, self.blob, o)
             return v
         end
@@ -107,7 +109,7 @@ for label, datatype in pairs(DataView.FixedTypes) do
     DataView['SetFixed' .. label] = function(self, offset, typelen, value, endian)
         local o = self.offset + offset
         if o + (typelen - 1) <= self.length then
-            local code = _ef(endian) .. 'c' .. tostring(typelen)
+            local code = _ef(endian) .. datatype.code .. tostring(typelen)
             return SetFixed(self, o, value, code)
         end
         return self
@@ -123,7 +125,7 @@ SetFixed = function(self, offset, value, code)
     if self.offset < offset then
         local size = offset - self.offset
         fmt[#fmt + 1] = 'c' .. tostring(size)
-        values[#values + 1] = self.blob:sub(self.offset, size)
+        values[#values + 1] = self.blob:sub(self.offset, offset - 1)
     end
 
     fmt[#fmt + 1] = code

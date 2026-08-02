@@ -1,8 +1,19 @@
 local Prompts = {}
 local PumpGroup = GetRandomIntInRange(0, 0xffffff)
 local WaterGroup = GetRandomIntInRange(0, 0xffffff)
-Filling = false
-PlayerCoords = vector3(0, 0, 0)
+local promptsStarted = false
+local pumpInteractionStarted = false
+local wildInteractionStarted = false
+local pumpObjectHashes = {}
+local waterLocationNames = {}
+
+for _, objectName in ipairs(Config.objects) do
+    pumpObjectHashes[#pumpObjectHashes + 1] = joaat(objectName)
+end
+
+for _, location in pairs(Locations) do
+    waterLocationNames[location.hash] = location.name
+end
 
 -- Create and start prompts
 local function CreatePrompt(keyCode, textKey, groups)
@@ -21,6 +32,8 @@ local function CreatePrompt(keyCode, textKey, groups)
 end
 
 local function StartPrompts()
+    if promptsStarted then return end
+    promptsStarted = true
     DBG:Info('Starting prompts...')
     Prompts.FillCanteenPrompt = CreatePrompt(Config.keys.fillCanteen.code, 'fillCanteen', { WaterGroup, PumpGroup })
     Prompts.FillBucketPrompt = CreatePrompt(Config.keys.fillBucket.code, 'fillBucket', { WaterGroup, PumpGroup })
@@ -59,21 +72,9 @@ local function ManageItems(itemType, pump)
     end
 end
 
-local function PlayerLocation()
-    CreateThread(function()
-        while true do
-            Wait(1000)
-            PlayerCoords = GetEntityCoords(PlayerPedId())
-        end
-    end)
-end
-
--- Start main functions when character is selected
-RegisterNetEvent('vorp:SelectedCharacter', function()
-    DBG:Info('Character selected, starting main functions...')
-
+---@param delaySickness boolean
+local function StartMainFunctions(delaySickness)
     StartPrompts()
-    PlayerLocation()
 
     if Config.pump.active then
         DBG:Info('Triggering PumpWater event.')
@@ -86,48 +87,40 @@ RegisterNetEvent('vorp:SelectedCharacter', function()
     end
 
     DBG:Info('Checking server for player sickness.')
-    local isSick = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
-    if isSick then
-        DBG:Info('Waiting to apply sickness effect...')
-        Wait(30000)
-        ApplySicknessEffect()
+    local sickness = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
+    if sickness and sickness.sick then
+        local remaining = math.max(0, tonumber(sickness.remaining) or 0)
+        if delaySickness then
+            DBG:Info('Waiting to apply sickness effect...')
+            local delay = math.min(30, remaining)
+            Wait(delay * 1000)
+            remaining = math.max(0, remaining - delay)
+        end
+        ApplySicknessEffect(remaining)
     end
+end
+
+-- Start main functions when character is selected
+RegisterNetEvent('vorp:SelectedCharacter', function()
+    DBG:Info('Character selected, starting main functions...')
+    StartMainFunctions(true)
 end)
 
- -- Command to restart main functions for development
-CreateThread(function()
-    if Config.devMode.active then
-        RegisterCommand(Config.devMode.command, function()
-            DBG:Info('Restarting main functions for development...')
-
-            StartPrompts()
-            PlayerLocation()
-
-            if Config.pump.active then
-                DBG:Info('Triggering PumpWater event for development.')
-                TriggerEvent('bcc-water:PumpWater')
-            end
-
-            if Config.wild.active then
-                DBG:Info('Triggering WildWater event for development.')
-                TriggerEvent('bcc-water:WildWater')
-            end
-
-            DBG:Info('Checking server for player sickness.')
-            local isSick = Core.Callback.TriggerAwait('bcc-water:CheckSickness')
-            if isSick then
-                ApplySicknessEffect()
-            end
-        end, false)
-    end
-end)
+-- Command to restart main functions for development
+if Config.devMode.active then
+    RegisterCommand(Config.devMode.command, function()
+        DBG:Info('Restarting main functions for development...')
+        StartMainFunctions(false)
+    end, false)
+end
 
 local function HandleWaterInteraction(configType, promptGroup, actions, promptNameFunc, canInteractFunc)
     while true do
         local sleep = 1000
         local playerPed = PlayerPedId()
 
-        if IsEntityDead(playerPed) or not IsPedOnFoot(playerPed) or Filling or not canInteractFunc() then
+        local playerCoords = GetEntityCoords(playerPed)
+        if IsEntityDead(playerPed) or not IsPedOnFoot(playerPed) or WaterClient.IsFilling() or not canInteractFunc(playerPed, playerCoords) then
             goto END
         end
 
@@ -143,9 +136,9 @@ local function HandleWaterInteraction(configType, promptGroup, actions, promptNa
                 if configType[action.configKey] then
                     local key = Config.keys[action.fullKey]
                     DrawText(
-                        PlayerCoords.x,
-                        PlayerCoords.y,
-                        PlayerCoords.z + (action.offset or 0.2),
+                        playerCoords.x,
+                        playerCoords.y,
+                        playerCoords.z + (action.offset or 0.2),
                         ('~t6~%s~q~ - %s'):format(key.char or tostring(key.code), _U(action.fullKey))
                     )
                 end
@@ -177,9 +170,10 @@ local function HandleWaterInteraction(configType, promptGroup, actions, promptNa
                         end
                         DBG:Info(string.format('Action performed: %s', tostring(action.fullKey)))
                     else
-                        Filling = false
+                        WaterClient.SetFilling(false)
                         goto END
                     end
+                    break
                 end
             end
         end
@@ -190,73 +184,72 @@ local function HandleWaterInteraction(configType, promptGroup, actions, promptNa
 end
 
 AddEventHandler('bcc-water:PumpWater', function()
+    if pumpInteractionStarted then return end
+    pumpInteractionStarted = true
     DBG:Info('PumpWater event triggered.')
 
     local pumpActions = {
-        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = {true}, fullKey = 'fillCanteen', offset = 0.2},
+        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', itemType = true, func = CanteenFill, param = {true}, fullKey = 'fillCanteen', offset = 0.2},
         {configKey = 'bucket',  prompt = 'FillBucketPrompt', func = ManageItems, param = {'bucket', true}, fullKey = 'fillBucket', offset = 0.1},
         {configKey = 'bottle',  prompt = 'FillBottlePrompt', func = ManageItems, param = {'bottle', true}, fullKey = 'fillBottle', offset = 0},
         {configKey = 'wash',    prompt = 'WashPrompt', func = WashPlayer, param = {'stand'}, fullKey = 'wash', offset = 0.3},
         {configKey = 'drink',   prompt = 'DrinkPrompt', func = PumpDrink, param = {}, fullKey = 'drink', offset = 0.4}
     }
 
-    HandleWaterInteraction(
-        Config.pump,
-        PumpGroup,
-        pumpActions,
-        function() return _U('waterPump') end,
-        function()
-            for _, obj in ipairs(Config.objects) do
-                if DoesObjectOfTypeExistAtCoords(PlayerCoords.x, PlayerCoords.y, PlayerCoords.z, 0.75, joaat(obj), false) then
-                    return true
+    CreateThread(function()
+        HandleWaterInteraction(
+            Config.pump,
+            PumpGroup,
+            pumpActions,
+            function() return _U('waterPump') end,
+            function(_, playerCoords)
+                for _, objectHash in ipairs(pumpObjectHashes) do
+                    if DoesObjectOfTypeExistAtCoords(playerCoords.x, playerCoords.y, playerCoords.z, 0.75, objectHash, false) then
+                        return true
+                    end
                 end
+                return false
             end
-            return false
-        end
-    )
+        )
+    end)
 end)
 
 AddEventHandler('bcc-water:WildWater', function()
+    if wildInteractionStarted then return end
+    wildInteractionStarted = true
     DBG:Info('WildWater event triggered.')
 
     local wildActions = {
-        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', func = CanteenFill, param = {false}, fullKey = 'fillCanteen', offset = 0.2},
+        {configKey = 'canteen', prompt = 'FillCanteenPrompt', callback = 'bcc-water:GetCanteenLevel', itemType = false, func = CanteenFill, param = {false}, fullKey = 'fillCanteen', offset = 0.2},
         {configKey = 'bucket',  prompt = 'FillBucketPrompt', func = ManageItems, param = {'bucket', false}, fullKey = 'fillBucket', offset = 0.1},
         {configKey = 'bottle',  prompt = 'FillBottlePrompt', func = ManageItems, param = {'bottle', false}, fullKey = 'fillBottle', offset = 0},
         {configKey = 'wash',    prompt = 'WashPrompt', func = WashPlayer, param = {'ground'}, fullKey = 'wash', offset = 0.3},
         {configKey = 'drink',   prompt = 'DrinkPrompt', func = WildDrink, param = {}, fullKey = 'drink', offset = 0.4}
     }
 
-    HandleWaterInteraction(
-        Config.wild,
-        WaterGroup,
-        wildActions,
-        function()
-            local hash = GetWaterMapZoneAtCoords(PlayerCoords.x, PlayerCoords.y, PlayerCoords.z)
-            for _, loc in pairs(Locations) do
-                if loc.hash == hash then
-                    return loc.name
+    CreateThread(function()
+        HandleWaterInteraction(
+            Config.wild,
+            WaterGroup,
+            wildActions,
+            function()
+                local playerCoords = WaterClient.GetCoords()
+                local hash = GetWaterMapZoneAtCoords(playerCoords.x, playerCoords.y, playerCoords.z)
+                return waterLocationNames[hash] or _U('wildWater')
+            end,
+            function(playerPed)
+                if not IsEntityInWater(playerPed) then
+                    return false
                 end
-            end
-            return _U('wildWater') -- fallback
-        end,
 
-        function()
-            local playerPed = PlayerPedId()
-            if not IsEntityInWater(playerPed) then
-                return false
-            end
+                if Config.crouch and GetPedCrouchMovement(playerPed) == 0 then
+                    return false
+                end
 
-            -- Updated check from santa
-            -- Optional crouch requirement
-            if Config.crouch and GetPedCrouchMovement(playerPed) == 0 then
-                return false
+                return IsPedStill(playerPed)
             end
-
-            -- Must be standing still (so they don't spam while swimming)
-            return IsPedStill(playerPed)
-        end
-    )
+        )
+    end)
 end)
 
 AddEventHandler('onResourceStop', function(resourceName)
@@ -265,17 +258,7 @@ AddEventHandler('onResourceStop', function(resourceName)
     DBG:Info('Resource stopped, cleaning up...')
     ClearPedTasksImmediately(PlayerPedId())
 
-    if Canteen then
-        DeleteObject(Canteen)
-    end
-
-    if Bottle then
-        DeleteObject(Bottle)
-    end
-
-    if Container then
-        DeleteObject(Container)
-    end
+    WaterClient.Cleanup()
 
     for name, prompt in pairs(Prompts) do
         UiPromptDelete(prompt)
